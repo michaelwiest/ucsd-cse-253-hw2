@@ -8,9 +8,6 @@ def sigma_d(x):
     s = sigam(x)
     return s * (1 - s)
 
-def approx_gradient(x, epsilon):
-    pass
-
 
 def softmax(x):
     dot_exp = np.exp(x)
@@ -18,7 +15,6 @@ def softmax(x):
     summed = np.reshape(summed, (dot_exp.shape[0], 1))
     summed = np.repeat(summed, dot_exp.shape[1], axis=1)
     return (dot_exp / (1.0 * summed))
-
 
 
 def get_one_hot(labels):

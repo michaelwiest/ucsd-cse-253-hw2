@@ -1,5 +1,6 @@
 from helper import *
 
+
 class HiddenToOutput(object):
     def __init__(self, num_in, num_out, eta, labels):
         self._setup()
@@ -32,3 +33,5 @@ class HiddenToOutput(object):
         g = softmax(self.forward_prop(input_data))
         delta_k = self.get_delta_k
         self.weights = self.weights + self.eta * delta_k * g
+
+    def approx_gradient
