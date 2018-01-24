@@ -1,3 +1,7 @@
+from mnist import MNIST
+import numpy as np
+import pylab as plt
+from helper import *
 
 
 class NetworkRunner(object):
@@ -6,16 +10,17 @@ class NetworkRunner(object):
         self.mnist_directory = mnist_directory
         self.lr_dampener = lr_dampener
         self.holdout_data = None
-        self.holdout_data_original = None
-        self.holdout_labels_original = None
+        self.holdout_data = None
+        self.holdout_labels = None
         self.target = None
         self.load_data(self.mnist_directory)
 
         if lr0 == None:
-            self.lr0 = 0.001 / self.train_data_original.shape[0]
+            self.lr0 = 0.001 / self.train_data.shape[0]
         else:
             self.lr0 = lr0
-        minibatch_index = 0
+        self.minibatch_index = 0
+        self.minibatch_size = minibatch_size
 
 
     def load_data(self, mnist_directory):
@@ -55,3 +60,19 @@ class NetworkRunner(object):
             self.test_data = self.test_data[-test_amount:]
             self.test_labels = self.test_labels[-test_amount:]
         print 'Subsetted data.'
+
+
+    def assign_holdout(self, percent):
+        percent /= 100.0
+        num_held = int(self.train_data.shape[0] * percent)
+        self.train_data = self.train_data[:-num_held]
+        self.train_labels = self.train_labels[:-num_held]
+        self.holdout_data = self.train_data[-num_held:]
+        self.holdout_labels = self.train_labels[-num_held:]
+        print 'Assigned holdout data'
+
+    def get_next_mini_batch(self):
+        td = self.train_data[self.minibatch_index * self.minibatch_size : (self.minibatch_index + 1) * self.minibatch_size]
+        tl = self.train_labels[self.minibatch_index * self.minibatch_size : (self.minibatch_index + 1) * self.minibatch_size]
+        self.minibatch_index += 1
+        return td, tl
