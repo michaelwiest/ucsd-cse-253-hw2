@@ -29,3 +29,7 @@ def get_one_hot(labels):
 
 def foo():
     pass
+
+def norm_loss_function(w, x, y):
+        y = get_one_hot(y)
+        return (-1.0 / (x.shape[0] * w.shape[1])) * np.sum(y * softmax(x, w))
