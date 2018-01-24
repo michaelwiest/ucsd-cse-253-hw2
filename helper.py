@@ -25,3 +25,8 @@ def get_one_hot(labels):
     potential_vals = list(set(labels))
     potential_vals.sort()
     return np.array([[int(l == p) for p in potential_vals] for l in labels])
+
+
+def norm_loss_function(w, x, y):
+        y = get_one_hot(y)
+        return (-1.0 / (x.shape[0] * w.shape[1])) * np.sum(y * softmax(x, w))

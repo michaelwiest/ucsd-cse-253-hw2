@@ -1,6 +1,6 @@
 from helper import *
 
-class SigmoidLayer(object):
+class VisibleToHidden(object):
     def __init__(self, input_shape, num_out, learn_rate):
         self.input_shape = input_shape
         self.num_out = num_out

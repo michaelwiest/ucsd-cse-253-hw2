@@ -1,6 +1,6 @@
 from helper import *
 
-class LinearLayer(object):
+class HiddenToVisible(object):
     def __init__(self, input_shape, num_out):
         self.input_shape = input_shape
         self.num_out = num_out
