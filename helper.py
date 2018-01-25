@@ -5,12 +5,13 @@ def sigma(x):
 
 
 def sigma_d(x):
-    s = sigam(x)
+    s = sigma(x)
     return s * (1 - s)
 
 
 def softmax(x):
     dot_exp = np.exp(x)
+    # print dot_exp.shape
     summed = np.sum(dot_exp, axis=1)
     summed = np.reshape(summed, (dot_exp.shape[0], 1))
     summed = np.repeat(summed, dot_exp.shape[1], axis=1)

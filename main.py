@@ -13,6 +13,9 @@ d, l = nr.get_next_mini_batch()
 
 SL = SigmoidLayer(785, 64)
 SML = SoftmaxLayer(65, 10, l)
-out = SL.forward_prop(d)
-out = SML.forward_prop(out)
+out1 = SL.forward_prop(d)
+
+out2 = SML.forward_prop(out1)
+w1 = SML.weights
 SML.update_weights(nr.lr0)
+SL.update_weights(SML, nr.lr0)

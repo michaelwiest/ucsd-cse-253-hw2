@@ -37,14 +37,6 @@ class SoftmaxLayer(object):
         return (labels - pred)
 
     def update_weights(self, eta):
-        g = self.forward_prop(self.last_input, add_bias=False)
-        # print g.shape
         delta_k = self.get_delta_k()
-        print '---'
-        print self.weights.shape
-        print g.shape
-        print delta_k.shape
-        print eta
-        print '---'
-        self.weights = self.weights + eta * delta_k * g
+        self.weights = self.weights + eta * np.dot(np.transpose(self.last_input), delta_k)
         return self.weights

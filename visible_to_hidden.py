@@ -30,16 +30,11 @@ class SigmoidLayer(object):
         wjk = SoftmaxLayer.weights
 
         # k = 10; wjk = 65*10
-        return sigma_d(aj) * np.dot(delta_k, np.transpose(wjk))
+
+        # Ignore the first column because it is bias.
+        return sigma_d(aj) * (np.dot(delta_k, np.transpose(wjk)))[:,1:]
 
     def update_weights(self, SoftmaxLayer, eta):
         delta_j = self.get_delta_j(SoftmaxLayer)
-        z_j = self.forward_prop(self.last_input, add_bias=False)
-        self.weights = self.weights + eta * delta_j * z_j * self.last_input
+        self.weights = self.weights + eta * np.dot(np.transpose(self.last_input), delta_j)
         return self.weights
-
-
-#    def back_prop(self, output_grad):
-#        # get_delta_k and get_output_weights come from michaels code
- #       output_grad = np.dot(get_delta_k, get_output_weights)
-#        return output_grad * sigma_d(self.last_input)
