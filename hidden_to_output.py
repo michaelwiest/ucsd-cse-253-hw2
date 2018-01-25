@@ -1,19 +1,50 @@
 from helper import *
 
-class HiddenToVisible(object):
-    def __init__(self, input_shape, num_out):
-        self.input_shape = input_shape
+
+class SoftmaxLayer(object):
+    def __init__(self, num_in, num_out, labels):
+        # self._setup()
+        # num_in should be 65
+        self.num_in = num_in
+        # num_out should be 10
         self.num_out = num_out
-        self._setup()
+        self.labels = labels
+        self.weights = None
 
-    def _setup(self):
-        self.W = np.random.rand(self.input_shape[1], self.num_out)
-        self.b = np.zeros(self.num_out)
+    def _add_bias_to_weights(self, weights):
+        return np.concatenate(
+                        (np.ones((temp.shape[1], 1)),
+                         weights), axis=0
+                        )
+    def set_random_weights(self):
+        print 'Initialized weights of shape: [{}, {}]'.format(self.num_in,
+                                                              self.num_out)
+        self.weights = np.random.rand(self.num_in, self.num_out)
 
 
-    def forward_prop(self, input_data):
-        self.last_input = input_data
-        return np.dot(input_data, self.W)
+    def forward_prop(self, input_data, add_bias=True, save_input=True):
+        if self.weights is None:
+            self.set_random_weights()
+        if add_bias:
+            input_data = prefix_ones(input_data)
+        if save_input:
+            self.last_input = input_data
+        return softmax(np.dot(input_data, self.weights))
 
-    def back_prop(self, output_grad):
-        return np.dot(output_grad, np.transpose(self.W))
+    def get_delta_k(self):
+        pred = self.forward_prop(self.last_input, add_bias=False)
+        labels = get_one_hot(self.labels)
+        return (labels - pred)
+
+    def update_weights(self, eta):
+        g = self.forward_prop(self.last_input, add_bias=False)
+        # print g.shape
+        delta_k = self.get_delta_k()
+        print '---'
+        print self.weights.shape
+        print g.shape
+        print delta_k.shape
+        print eta
+        print '---'
+        self.weights = self.weights + eta * delta_k * g
+        return self.weights
