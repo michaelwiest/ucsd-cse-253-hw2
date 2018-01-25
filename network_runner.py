@@ -16,7 +16,7 @@ class NetworkRunner(object):
         self.load_data(self.mnist_directory)
 
         if lr0 == None:
-            self.lr0 = 0.001 / self.train_data.shape[0]
+            self.lr0 = 1 / self.train_data.shape[0]
         else:
             self.lr0 = lr0
         self.minibatch_index = 0
@@ -28,19 +28,11 @@ class NetworkRunner(object):
         tr_data, tr_labels = mndata.load_training()
         te_data, te_labels = mndata.load_testing()
         train_temp = np.array(tr_data)
-        # self.train_data = np.concatenate(
-        #                                 (np.ones((train_temp.shape[0], 1)),
-        #                                  train_temp
-        #                                 ), axis=1
-        #                                 )
+
         self.train_data = train_temp
         self.train_labels = np.array(tr_labels)
         test_temp = np.array(te_data)
-        # self.test_data = np.concatenate(
-        #                                 (np.ones((test_temp.shape[0], 1)),
-        #                                  test_temp
-        #                                 ), axis=1
-        #                                 )
+
         self.test_data = test_temp
         self.test_labels = np.array(te_labels)
         self.num_categories = len(list(set(self.train_labels)))
@@ -63,6 +55,12 @@ class NetworkRunner(object):
             self.test_labels = self.test_labels[-test_amount:]
         print 'Subsetted data.'
 
+
+    def update_learning_rate(self, iteration):
+        if self.lr_dampener is not None:
+            return self.lr0 / (1.0 + iteration / self.lr_dampener)
+        else:
+            return self.lr0
 
     def assign_holdout(self, percent):
         percent /= 100.0

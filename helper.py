@@ -11,7 +11,6 @@ def sigma_d(x):
 
 def softmax(x):
     dot_exp = np.exp(x)
-    # print dot_exp.shape
     summed = np.sum(dot_exp, axis=1)
     summed = np.reshape(summed, (dot_exp.shape[0], 1))
     summed = np.repeat(summed, dot_exp.shape[1], axis=1)
@@ -32,3 +31,14 @@ def norm_loss_function(x, y):
 def prefix_ones(some_array):
     return np.concatenate((np.ones((some_array.shape[0], 1)),
                            some_array), axis=1)
+
+
+def evaluate(x, labels):
+        # y = get_one_hot(labels)
+        possible_categories = np.array(list(set(labels)))
+        # print possible_categories
+        ind = np.argmax(x, axis=1)
+        pred = np.array([possible_categories[i] for i in ind])
+        # print y
+        # print pred
+        return 100.0 - 100.0 * np.sum((pred != labels).astype(int)) / (1.0 * x.shape[0])

@@ -21,7 +21,6 @@ class SoftmaxLayer(object):
                                                               self.num_out)
         self.weights = np.random.rand(self.num_in, self.num_out)
 
-
     def forward_prop(self, input_data, add_bias=True, save_input=True):
         if self.weights is None:
             self.set_random_weights()
