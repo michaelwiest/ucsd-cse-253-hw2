@@ -1,3 +1,4 @@
+from __future__ import print_function
 from helper import *
 
 
@@ -17,8 +18,8 @@ class SoftmaxLayer(object):
                          weights), axis=0
                         )
     def set_random_weights(self):
-        print 'Initialized weights of shape: [{}, {}]'.format(self.num_in,
-                                                              self.num_out)
+        print('Initialized weights of shape: [{}, {}]'.format(self.num_in,
+                                                              self.num_out))
         self.weights = np.random.rand(self.num_in, self.num_out)
 
     def forward_prop(self, input_data, add_bias=True, save_input=True):

@@ -1,3 +1,4 @@
+from __future__ import print_function
 from mnist import MNIST
 import numpy as np
 import pylab as plt
@@ -18,7 +19,7 @@ class NetworkRunner(object):
         self.load_data(self.mnist_directory)
 
         if lr0 == None:
-            self.lr0 = 0.01 / self.train_data.shape[0]
+            self.lr0 = 100 / self.train_data.shape[0]
         else:
             self.lr0 = lr0
         self.minibatch_index = 0
@@ -41,7 +42,7 @@ class NetworkRunner(object):
         self.possible_categories = list(set(self.train_labels))
         self.possible_categories.sort()
         self.num_categories = len(self.possible_categories)
-        print 'Loaded data...'
+        print('Loaded data...')
 
     def subset_data(self, train_amount, test_amount):
         if train_amount > 0:
@@ -56,7 +57,7 @@ class NetworkRunner(object):
         else:
             self.test_data = self.test_data[-test_amount:]
             self.test_labels = self.test_labels[-test_amount:]
-        print 'Subsetted data.'
+        print('Subsetted data.')
 
 
     def update_learning_rate(self, iteration):
@@ -72,7 +73,7 @@ class NetworkRunner(object):
         self.train_labels = self.train_labels[:-num_held]
         self.holdout_data = self.train_data[-num_held:]
         self.holdout_labels = self.train_labels[-num_held:]
-        print 'Assigned holdout data'
+        print('Assigned holdout data')
 
     def get_next_mini_batch(self, shuffle=False):
         if not shuffle:
@@ -90,8 +91,8 @@ class NetworkRunner(object):
         return td, tl
 
     def train(self, iterations, num_hidden, reset_batches=True, epochs_per_batch=1):
-        train_loss_log = []
-        train_classification_log = []
+        self.train_loss_log = []
+        self.train_classification_log = []
         if reset_batches:
             self.minibatch_index = 0
 
@@ -104,6 +105,7 @@ class NetworkRunner(object):
         for iteration in xrange(iterations):
 
             SML.labels = l
+            # print(SML.labels)
 
             for i in xrange(epochs_per_batch):
                 out1 = SL.forward_prop(d)
@@ -112,10 +114,8 @@ class NetworkRunner(object):
                 SML.update_weights(eta)
                 SL.update_weights(SML, eta)
             eta = self.update_learning_rate(iteration)
-            train_loss_log.append(norm_loss_function(
+            self.train_loss_log.append(norm_loss_function(
                              softmax(
-                                np.dot(SML.last_input, SML.weights)),
-                             l
-                             ))
-            train_classification_log.append(evaluate(out2, l))
+                                np.dot(SML.last_input, SML.weights)), l))
+            self.train_classification_log.append(evaluate(out2, l))
             d, l = self.get_next_mini_batch()
