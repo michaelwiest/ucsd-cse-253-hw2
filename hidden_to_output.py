@@ -1,40 +1,50 @@
 from helper import *
 
 
-class HiddenToOutput(object):
-    def __init__(self, num_in, num_out, eta, labels):
-        self._setup()
-        self.eta = eta
+class SoftmaxLayer(object):
+    def __init__(self, num_in, num_out, labels):
+        # self._setup()
+        # num_in should be 65
         self.num_in = num_in
+        # num_out should be 10
         self.num_out = num_out
         self.labels = labels
+        self.weights = None
 
     def _add_bias_to_weights(self, weights):
         return np.concatenate(
                         (np.ones((temp.shape[1], 1)),
                          weights), axis=0
                         )
-    def _setup(self):
-        temp = np.random.rand(self.num_in, self.num_out)
-        # Load in the weights with a bias of 1
-        self.weights = self._add_bias_to_weights(temp)
+    def set_random_weights(self):
+        print 'Initialized weights of shape: [{}, {}]'.format(self.num_in,
+                                                              self.num_out)
+        self.weights = np.random.rand(self.num_in, self.num_out)
 
-    def forward_prop(self, input_data):
-        self.last_input = input_data
+
+    def forward_prop(self, input_data, add_bias=True, save_input=True):
+        if self.weights is None:
+            self.set_random_weights()
+        if add_bias:
+            input_data = prefix_ones(input_data)
+        if save_input:
+            self.last_input = input_data
         return softmax(np.dot(input_data, self.weights))
 
     def get_delta_k(self):
-        pred = self.forward_prop(self.last_input)
+        pred = self.forward_prop(self.last_input, add_bias=False)
         labels = get_one_hot(self.labels)
         return (labels - pred)
 
-    def update_weights(self):
-        g = softmax(self.forward_prop(input_data))
+    def update_weights(self, eta):
+        g = self.forward_prop(self.last_input, add_bias=False)
+        # print g.shape
         delta_k = self.get_delta_k()
-        self.weights = self.weights + self.eta * delta_k * norm_loss_function(self.weights, self.last_input, self.labels)
-
-    # def get_approx_gradient(self, input_data, weights, labels):
-    #     norm_loss_function(weights, last_input, labels)
-
-
-    # def approx_gradient
+        print '---'
+        print self.weights.shape
+        print g.shape
+        print delta_k.shape
+        print eta
+        print '---'
+        self.weights = self.weights + eta * delta_k * g
+        return self.weights

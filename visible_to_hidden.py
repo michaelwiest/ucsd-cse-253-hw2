@@ -1,37 +1,42 @@
 from helper import *
 
 class SigmoidLayer(object):
-    def __init__(self, num_in, num_out, eta, labels_in):
+    def __init__(self, num_in, num_out):
         # num out is 64
         self.num_out = num_out
-        self.eta = eta
-        # num in is 784
+        # self.eta = eta
+        # num in is 785
         self.num_in = num_in
-        self.labels_in = labels_in
-        self._setup()
+        self.weights = None
 
-    def _setup(self):
-        temp = np.random.rand(self.num_in, self.num_out)
-        # add one to weights
-        self.weights = np.concatenate(temp,np.ones((self.num_in,1)),0)
+    def set_random_weights(self):
+        print 'Initialized weights of shape: [{}, {}]'.format(self.num_in,
+                                                              self.num_out)
+        self.weights = np.random.rand(self.num_in, self.num_out)
 
 
-    def forward_prop(self, input_data):
-        self.last_input = input_data
-        return sigma(np.dot(input_data,self.weights))
+    def forward_prop(self, input_data, add_bias=True, save_input=True):
+        if self.weights is None:
+            self.set_random_weights()
+        if add_bias:
+            input_data = prefix_ones(input_data)
+        if save_input:
+            self.last_input = input_data
+        return sigma(np.dot(input_data, self.weights))
 
-    def get_delta_j(self):
+    def get_delta_j(self, SoftmaxLayer):
         aj = np.dot(self.last_input, self.weights)
-        delta_k = LinearLayer.get_delta_k()
-        wjk = LinearLayer.get_output_weights()
+        delta_k = SoftmaxLayer.get_delta_k()
+        wjk = SoftmaxLayer.weights
 
         # k = 10; wjk = 65*10
-        return sigma_d(aj)*np.dot(delta_k,np.transpose(wjk))
+        return sigma_d(aj) * np.dot(delta_k, np.transpose(wjk))
 
-    def update_weights_j(self, input_data):
-        delta_j = self.get_delta_j()
-        z_j = self.forward_prop(input_data)
-        self.weights = self.weights + eta*delta_j*z_j
+    def update_weights(self, SoftmaxLayer, eta):
+        delta_j = self.get_delta_j(SoftmaxLayer)
+        z_j = self.forward_prop(self.last_input, add_bias=False)
+        self.weights = self.weights + eta * delta_j * z_j * self.last_input
+        return self.weights
 
 
 #    def back_prop(self, output_grad):

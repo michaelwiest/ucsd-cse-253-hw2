@@ -28,20 +28,20 @@ class NetworkRunner(object):
         tr_data, tr_labels = mndata.load_training()
         te_data, te_labels = mndata.load_testing()
         train_temp = np.array(tr_data)
-        self.train_data = np.concatenate(
-                                        (np.ones((train_temp.shape[0], 1)),
-                                         train_temp
-                                        ), axis=1
-                                        )
-        # self.train_data = train_temp
+        # self.train_data = np.concatenate(
+        #                                 (np.ones((train_temp.shape[0], 1)),
+        #                                  train_temp
+        #                                 ), axis=1
+        #                                 )
+        self.train_data = train_temp
         self.train_labels = np.array(tr_labels)
         test_temp = np.array(te_data)
-        self.test_data = np.concatenate(
-                                        (np.ones((test_temp.shape[0], 1)),
-                                         test_temp
-                                        ), axis=1
-                                        )
-        # self.test_data = test_temp
+        # self.test_data = np.concatenate(
+        #                                 (np.ones((test_temp.shape[0], 1)),
+        #                                  test_temp
+        #                                 ), axis=1
+        #                                 )
+        self.test_data = test_temp
         self.test_labels = np.array(te_labels)
         self.num_categories = len(list(set(self.train_labels)))
         self.possible_categories = list(set(self.train_labels))
@@ -90,5 +90,7 @@ class NetworkRunner(object):
             td, tl = get_next_mini_batch()
             '''
             out1 = VH.forward_prop(td)
+            out2 = HO.forward_prop(out1)
+
 
             '''
