@@ -102,6 +102,7 @@ class NetworkRunner(object):
         SML = SoftmaxLayer(num_hidden + 1, self.num_categories, l)
 
         for iteration in xrange(iterations):
+            SML.labels = l
 
             for i in xrange(epochs_per_batch):
                 out1 = SL.forward_prop(d)
