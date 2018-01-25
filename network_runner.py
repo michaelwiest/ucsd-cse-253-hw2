@@ -3,6 +3,8 @@ import numpy as np
 import pylab as plt
 from helper import *
 import random
+from visible_to_hidden import *
+from hidden_to_output import *
 
 class NetworkRunner(object):
     def __init__(self, mnist_directory, lr0=None, lr_dampener=None,
@@ -35,9 +37,10 @@ class NetworkRunner(object):
 
         self.test_data = test_temp
         self.test_labels = np.array(te_labels)
-        self.num_categories = len(list(set(self.train_labels)))
+
         self.possible_categories = list(set(self.train_labels))
         self.possible_categories.sort()
+        self.num_categories = len(self.possible_categories)
         print 'Loaded data...'
 
     def subset_data(self, train_amount, test_amount):
@@ -87,17 +90,33 @@ class NetworkRunner(object):
         return td, tl
 
     def train(self, iterations, num_hidden, reset_batches=True, epochs_per_batch=1):
+        train_loss_log = []
+        train_classification_log = []
         if reset_batches:
             self.minibatch_index = 0
 
         eta = self.lr0
-        VH = VisibleToHidden()
-        HO = HiddenToOutput(num_hidden, len(list(set(tl))), eta, tl)
+
+        d, l = self.get_next_mini_batch()
+        SL = SigmoidLayer(self.train_data.shape[1] + 1, num_hidden)
+        SML = SoftmaxLayer(num_hidden + 1, self.num_categories, l)
+
         for iteration in xrange(iterations):
-            td, tl = get_next_mini_batch()
-            '''
-            out1 = VH.forward_prop(td)
-            out2 = HO.forward_prop(out1)
 
+            for i in xrange(epochs_per_batch):
+                out1 = SL.forward_prop(d)
+                out2 = SML.forward_prop(out1)
 
-            '''
+                SML.update_weights(eta)
+                SL.update_weights(SML, eta)
+
+            d, l = self.get_next_mini_batch()
+
+            eta = self.update_learning_rate(iteration)
+            train_loss_log.append(norm_loss_function(
+                             softmax(
+                                np.dot(SML.last_input, SML.weights)),
+                             l
+                             ))
+
+            train_classification_log.append(evaluate(out2, l))

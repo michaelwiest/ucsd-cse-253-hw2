@@ -7,31 +7,13 @@ import pylab as plt
 nr = NetworkRunner('mnist')
 d, l = nr.get_next_mini_batch()
 
-SL = SigmoidLayer(785, 64)
-SML = SoftmaxLayer(65, 10, l)
-errs = []
-preds = []
-eta = nr.lr0
+
 iters = 2000
-for i in xrange(iters):
-    d, l = nr.get_next_mini_batch(shuffle=True)
-    for i in xrange(2):
-        out1 = SL.forward_prop(d)
-        out2 = SML.forward_prop(out1)
-        w1 = SML.weights
-        SML.update_weights(eta)
-        SL.update_weights(SML, eta)
-    errs.append(norm_loss_function(
-                     softmax(
-                        np.dot(SML.last_input, SML.weights)),
-                     l
-                     ))
-    eta = nr.update_learning_rate(i)
+num_hidden = 64
+nr.train(iters, num_hidden)
 
-    preds.append(evaluate(out2, l))
-
-plt.plot(xrange(iters), errs)
-plt.show()
-
-plt.plot(xrange(iters), preds)
-plt.show()
+# plt.plot(xrange(iters), errs)
+# plt.show()
+#
+# plt.plot(xrange(iters), preds)
+# plt.show()
