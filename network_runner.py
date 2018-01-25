@@ -2,7 +2,7 @@ from mnist import MNIST
 import numpy as np
 import pylab as plt
 from helper import *
-
+import random
 
 class NetworkRunner(object):
     def __init__(self, mnist_directory, lr0=None, lr_dampener=None,
@@ -16,7 +16,7 @@ class NetworkRunner(object):
         self.load_data(self.mnist_directory)
 
         if lr0 == None:
-            self.lr0 = 1 / self.train_data.shape[0]
+            self.lr0 = 0.01 / self.train_data.shape[0]
         else:
             self.lr0 = lr0
         self.minibatch_index = 0
@@ -71,10 +71,19 @@ class NetworkRunner(object):
         self.holdout_labels = self.train_labels[-num_held:]
         print 'Assigned holdout data'
 
-    def get_next_mini_batch(self):
-        td = self.train_data[self.minibatch_index * self.minibatch_size : (self.minibatch_index + 1) * self.minibatch_size]
-        tl = self.train_labels[self.minibatch_index * self.minibatch_size : (self.minibatch_index + 1) * self.minibatch_size]
-        self.minibatch_index += 1
+    def get_next_mini_batch(self, shuffle=False):
+        if not shuffle:
+            if (self.minibatch_index + 1) * self.minibatch_size > self.train_data.shape[0]:
+                self.minibatch_index = 0
+
+            td = self.train_data[self.minibatch_index * self.minibatch_size : (self.minibatch_index + 1) * self.minibatch_size]
+            tl = self.train_labels[self.minibatch_index * self.minibatch_size : (self.minibatch_index + 1) * self.minibatch_size]
+            self.minibatch_index += 1
+        else:
+            indices = random.sample(xrange(self.train_data.shape[0]), self.minibatch_size)
+            td = self.train_data[indices]
+            tl = self.train_labels[indices]
+
         return td, tl
 
     def train(self, iterations, num_hidden, reset_batches=True, epochs_per_batch=1):

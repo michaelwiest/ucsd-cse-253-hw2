@@ -4,7 +4,7 @@ from visible_to_hidden import *
 from helper import *
 import pylab as plt
 
-nr = NetworkRunner('mnist', lr_dampener=50)
+nr = NetworkRunner('mnist')
 d, l = nr.get_next_mini_batch()
 
 SL = SigmoidLayer(785, 64)
@@ -12,9 +12,9 @@ SML = SoftmaxLayer(65, 10, l)
 errs = []
 preds = []
 eta = nr.lr0
-iters = 100
+iters = 2000
 for i in xrange(iters):
-    d, l = nr.get_next_mini_batch()
+    d, l = nr.get_next_mini_batch(shuffle=True)
     for i in xrange(2):
         out1 = SL.forward_prop(d)
         out2 = SML.forward_prop(out1)
