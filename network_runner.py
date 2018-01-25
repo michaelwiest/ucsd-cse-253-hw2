@@ -102,6 +102,7 @@ class NetworkRunner(object):
         SML = SoftmaxLayer(num_hidden + 1, self.num_categories, l)
 
         for iteration in xrange(iterations):
+
             SML.labels = l
 
             for i in xrange(epochs_per_batch):
@@ -110,14 +111,11 @@ class NetworkRunner(object):
 
                 SML.update_weights(eta)
                 SL.update_weights(SML, eta)
-
-            d, l = self.get_next_mini_batch()
-
             eta = self.update_learning_rate(iteration)
             train_loss_log.append(norm_loss_function(
                              softmax(
                                 np.dot(SML.last_input, SML.weights)),
                              l
                              ))
-
             train_classification_log.append(evaluate(out2, l))
+            d, l = self.get_next_mini_batch()
