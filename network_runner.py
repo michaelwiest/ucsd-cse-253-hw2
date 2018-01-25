@@ -33,6 +33,7 @@ class NetworkRunner(object):
                                          train_temp
                                         ), axis=1
                                         )
+        # self.train_data = train_temp
         self.train_labels = np.array(tr_labels)
         test_temp = np.array(te_data)
         self.test_data = np.concatenate(
@@ -40,6 +41,7 @@ class NetworkRunner(object):
                                          test_temp
                                         ), axis=1
                                         )
+        # self.test_data = test_temp
         self.test_labels = np.array(te_labels)
         self.num_categories = len(list(set(self.train_labels)))
         self.possible_categories = list(set(self.train_labels))
@@ -76,3 +78,17 @@ class NetworkRunner(object):
         tl = self.train_labels[self.minibatch_index * self.minibatch_size : (self.minibatch_index + 1) * self.minibatch_size]
         self.minibatch_index += 1
         return td, tl
+
+    def train(self, iterations, num_hidden, reset_batches=True, epochs_per_batch=1):
+        if reset_batches:
+            self.minibatch_index = 0
+
+        eta = self.lr0
+        VH = VisibleToHidden()
+        HO = HiddenToOutput(num_hidden, len(list(set(tl))), eta, tl)
+        for iteration in xrange(iterations):
+            td, tl = get_next_mini_batch()
+            '''
+            out1 = VH.forward_prop(td)
+
+            '''
