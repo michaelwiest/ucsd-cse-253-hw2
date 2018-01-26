@@ -6,6 +6,9 @@ from helper import *
 import random
 from visible_to_hidden import *
 from hidden_to_output import *
+import time
+
+np.set_printoptions(threshold=np.nan)
 
 class NetworkRunner(object):
     def __init__(self, mnist_directory, lr0=None, lr_dampener=None,
@@ -19,7 +22,7 @@ class NetworkRunner(object):
         self.load_data(self.mnist_directory)
 
         if lr0 == None:
-            self.lr0 = 100 / self.train_data.shape[0]
+            self.lr0 = 100.0 / self.train_data.shape[0]
         else:
             self.lr0 = lr0
         self.minibatch_index = 0
@@ -32,7 +35,7 @@ class NetworkRunner(object):
         te_data, te_labels = mndata.load_testing()
         train_temp = np.array(tr_data) / 175.0
 
-        self.train_data = train_temp - 1
+        self.train_data = train_temp - 1.0
         self.train_labels = np.array(tr_labels)
         test_temp = np.array(te_data)
 
@@ -99,23 +102,22 @@ class NetworkRunner(object):
         eta = self.lr0
 
         d, l = self.get_next_mini_batch()
-        SL = SigmoidLayer(self.train_data.shape[1] + 1, num_hidden)
-        SML = SoftmaxLayer(num_hidden + 1, self.num_categories, l)
+        self.sigmoid_layer = SigmoidLayer(self.train_data.shape[1] + 1, num_hidden)
+        self.softmax_layer = SoftmaxLayer(num_hidden + 1, self.num_categories)
 
         for iteration in xrange(iterations):
 
-            SML.labels = l
-            # print(SML.labels)
-
             for i in xrange(epochs_per_batch):
-                out1 = SL.forward_prop(d)
-                out2 = SML.forward_prop(out1)
+                intermediate = self.sigmoid_layer.forward_prop(d)
+            
+                preds = self.softmax_layer.forward_prop(intermediate)
 
-                SML.update_weights(eta)
-                SL.update_weights(SML, eta)
+                self.softmax_layer.update_weights(eta, l, preds)
+                self.sigmoid_layer.update_weights(self.softmax_layer, eta, l, preds)
+
             eta = self.update_learning_rate(iteration)
             self.train_loss_log.append(norm_loss_function(
                              softmax(
-                                np.dot(SML.last_input, SML.weights)), l))
-            self.train_classification_log.append(evaluate(out2, l))
+                                np.dot(self.softmax_layer.last_input, self.softmax_layer.weights)), l))
+            self.train_classification_log.append(evaluate(preds, l))
             d, l = self.get_next_mini_batch()

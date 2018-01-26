@@ -9,7 +9,7 @@ nr = NetworkRunner('mnist')
 d, l = nr.get_next_mini_batch()
 
 
-iters = 1000
+iters = 1500
 num_hidden = 64
 nr.train(iters, num_hidden)
 
