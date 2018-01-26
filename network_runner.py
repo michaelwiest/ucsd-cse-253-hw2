@@ -109,7 +109,7 @@ class NetworkRunner(object):
 
             for i in xrange(epochs_per_batch):
                 intermediate = self.sigmoid_layer.forward_prop(d)
-            
+
                 preds = self.softmax_layer.forward_prop(intermediate)
 
                 self.softmax_layer.update_weights(eta, l, preds)
@@ -120,4 +120,4 @@ class NetworkRunner(object):
                              softmax(
                                 np.dot(self.softmax_layer.last_input, self.softmax_layer.weights)), l))
             self.train_classification_log.append(evaluate(preds, l))
-            d, l = self.get_next_mini_batch()
+            d, l = self.get_next_mini_batch(shuffle=True)

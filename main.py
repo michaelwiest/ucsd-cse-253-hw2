@@ -5,11 +5,11 @@ from visible_to_hidden import *
 from helper import *
 import pylab as plt
 
-nr = NetworkRunner('mnist')
+nr = NetworkRunner('mnist', lr_dampener=10000)
 d, l = nr.get_next_mini_batch()
 
 
-iters = 1500
+iters = 10000
 num_hidden = 64
 nr.train(iters, num_hidden)
 
