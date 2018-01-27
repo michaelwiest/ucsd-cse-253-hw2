@@ -34,8 +34,14 @@ class SoftmaxLayer(object):
         labels = get_one_hot(labels)
         return (labels - predictions)
 
+
     def update_weights(self, eta, labels, predictions):
         delta_k = self.get_delta_k(predictions, labels)
         self.prev_weights = self.weights
         self.weights = self.weights + eta * np.dot(np.transpose(self.last_input), delta_k)
+
         return self.weights
+
+    def grad(self, labels, predictions):
+        delta_k = self.get_delta_k(predictions, labels)
+        return np.dot(np.transpose(self.last_input), delta_k)

@@ -1,5 +1,6 @@
 from __future__ import print_function
 from helper import *
+from random import randrange
 
 class SigmoidLayer(object):
     def __init__(self, num_in, num_out):
@@ -22,7 +23,6 @@ class SigmoidLayer(object):
             self.set_random_weights()
         if add_bias:
             input_data = prefix_ones(input_data)
-
         if save_input:
             self.last_input = input_data
         # print(self.last_input)
@@ -43,3 +43,7 @@ class SigmoidLayer(object):
         delta_j = self.get_delta_j(SoftmaxLayer, predictions, labels)
         self.weights = self.weights + eta * np.dot(np.transpose(self.last_input), delta_j)
         return self.weights
+
+    def grad(self, SoftmaxLayer, labels, predictions):
+        delta_j = self.get_delta_j(SoftmaxLayer, predictions, labels)
+        return np.dot(np.transpose(self.last_input), delta_j)

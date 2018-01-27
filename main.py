@@ -9,9 +9,10 @@ nr = NetworkRunner('mnist', lr_dampener=10000)
 d, l = nr.get_next_mini_batch()
 
 
-iters = 10000
+iters = 1000
 num_hidden = 64
 nr.train(iters, num_hidden)
+
 
 plt.plot(xrange(iters), nr.train_loss_log)
 plt.show()
