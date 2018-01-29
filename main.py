@@ -6,15 +6,23 @@ from helper import *
 import pylab as plt
 
 nn = NeuralNetwork('mnist', lr_dampener=10000)
+nn.assign_holdout(10)
 d, l = nn.get_next_mini_batch()
 
 
 iters = 1000
-num_hidden = [64, 64]
+num_hidden = [64]
 nn.train(iters, num_hidden)
 
-plt.plot(xrange(iters), nn.train_loss_log)
+# plt.plot(xrange(iters), nn.train_loss_log)
+# plt.show()
+#
+# plt.plot(xrange(iters), nn.train_classification_log)
+# plt.show()
+
+
+plt.plot(xrange(iters), nn.holdout_loss_log)
 plt.show()
 
-plt.plot(xrange(iters), nn.train_classification_log)
+plt.plot(xrange(iters), nn.holdout_classification_log)
 plt.show()
