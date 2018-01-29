@@ -5,16 +5,16 @@ from visible_to_hidden import *
 from helper import *
 import pylab as plt
 
-nr = NetworkRunner('mnist', lr_dampener=10000)
-d, l = nr.get_next_mini_batch()
+nn = NeuralNetwork('mnist', lr_dampener=10000)
+d, l = nn.get_next_mini_batch()
 
 
 iters = 10000
 num_hidden = 64
-nr.train(iters, num_hidden)
+nn.train(iters, num_hidden)
 
-plt.plot(xrange(iters), nr.train_loss_log)
+plt.plot(xrange(iters), nn.train_loss_log)
 plt.show()
 
-plt.plot(xrange(iters), nr.train_classification_log)
+plt.plot(xrange(iters), nn.train_classification_log)
 plt.show()

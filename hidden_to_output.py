@@ -13,11 +13,11 @@ class SoftmaxLayer(object):
         self.weights = None
 
     def set_random_weights(self):
-        scale = 2
         print('Initialized weights of shape: [{}, {}]'.format(self.num_in,
                                                               self.num_out))
+        dev = 1.0 / (np.sqrt(self.num_in))
         self.prev_weights = np.zeros((self.num_in, self.num_out))
-        self.weights = (np.random.rand(self.num_in, self.num_out) * scale) - (scale - 1)
+        self.weights = (np.random.normal(0, dev, (self.num_in, self.num_out)))
 
     def forward_prop(self, input_data, add_bias=True, save_input=True):
         if self.weights is None:

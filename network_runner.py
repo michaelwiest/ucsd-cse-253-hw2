@@ -10,7 +10,7 @@ import time
 
 np.set_printoptions(threshold=np.nan)
 
-class NetworkRunner(object):
+class NeuralNetwork(object):
     def __init__(self, mnist_directory, lr0=None, lr_dampener=None,
                  minibatch_size=128):
         self.mnist_directory = mnist_directory
@@ -93,18 +93,48 @@ class NetworkRunner(object):
 
         return td, tl
 
-    def train(self, iterations, num_hidden, reset_batches=True, epochs_per_batch=1):
+    def log(self, labels):
+        self.train_loss_log.append(norm_loss_function(
+                         self.softmax_layer.forward_prop(
+                            self.softmax_layer.last_input,
+                            self.softmax_layer.weights,
+                            add_bias=False,
+                            save_input=False)),
+                         labels)
+        self.train_classification_log.append(evaluate(preds, labels))
+
+        intermediate = self.Sigmoid_layer
+        self.train_loss_log.append(norm_loss_function(
+                         self.softmax_layer.forward_prop(
+                            self.holdout_,
+                            self.softmax_layer.weights,
+                            add_bias=True,
+                            save_input=False)),
+                         labels)
+        self.holdout_classification_log.append(evaluate(preds, labels))
+
+
+    def __build_layers(self, hidden_layers):
+        self.layers = []
+        layers.append(SigmoidLayer(self.train_data.shape[1] + 1, hidden_layers[0]))
+        for i in xrange(1, len(hidden_layers)):
+            layers.append(SigmoidLayer(hidden_layers[i] + 1, hidden_layers[i + 1]))
+        layers.append(SoftmaxLayer(hidden_layers[-1] + 1, self.num_categories))
+
+    def train(self, iterations, hidden_layers, reset_batches=True, epochs_per_batch=1):
         self.train_loss_log = []
         self.train_classification_log = []
+        self.holdout_loss_log = []
+        self.holdout_classification_log = []
         if reset_batches:
             self.minibatch_index = 0
 
         eta = self.lr0
 
         d, l = self.get_next_mini_batch()
-        self.sigmoid_layer = SigmoidLayer(self.train_data.shape[1] + 1, num_hidden)
-        self.softmax_layer = SoftmaxLayer(num_hidden + 1, self.num_categories)
-
+        # self.sigmoid_layer = SigmoidLayer(self.train_data.shape[1] + 1, num_hidden)
+        # self.softmax_layer = SoftmaxLayer(num_hidden + 1, self.num_categories)
+        self.__build_layers(hidden_layers)
         for iteration in xrange(iterations):
 
             for i in xrange(epochs_per_batch):
@@ -116,8 +146,13 @@ class NetworkRunner(object):
                 self.sigmoid_layer.update_weights(self.softmax_layer, eta, l, preds)
 
             eta = self.update_learning_rate(iteration)
-            self.train_loss_log.append(norm_loss_function(
-                             softmax(
-                                np.dot(self.softmax_layer.last_input, self.softmax_layer.weights)), l))
-            self.train_classification_log.append(evaluate(preds, l))
+
             d, l = self.get_next_mini_batch(shuffle=True)
+
+
+
+
+
+
+
+pass
