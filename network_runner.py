@@ -94,6 +94,68 @@ class NetworkRunner(object):
 
         return td, tl
 
+    def compare_gradients(self, epsilon, dat, lab, weights_sigmoid, weights_softmax):
+        intermediate = self.sigmoid_layer.forward_prop(dat)
+        preds = self.softmax_layer.forward_prop(intermediate)
+
+        shape_perturb = weights_softmax.shape
+        data_ind = random.randrange(0,self.minibatch_size) # from 1 to 128
+        perturb_ind = [random.randrange(1,shape_perturb[0]),random.randrange(0,shape_perturb[1])]
+        # ^ from [65x10], so [between 1 and 64][between 0 and 9]
+
+        # for wjk
+        # only find gradient for one data point
+        grad_real = self.softmax_layer.grad([lab[data_ind]],preds[data_ind], data_ind) # 65x10
+        # grad_real = grad_real[perturb_ind[0]][perturb_ind[1]] # 1
+        grad_real = grad_real[perturb_ind[0]]
+
+        g_diff=[]
+        num_loss=[]
+        # perturb weight with index jk
+        perturb(weights_softmax, epsilon, perturb_ind)
+        preds = self.softmax_layer.forward_prop(intermediate)
+        # only find cross entropy loss for one data point
+        cross_ent_l = cross_ent_loss(preds[data_ind],[lab[data_ind]]) # get 1x10
+        # cross_ent_l = cross_ent_l[perturb_ind[1]]
+
+        perturb(weights_softmax, -2*epsilon, perturb_ind)
+        preds = self.softmax_layer.forward_prop(intermediate)
+        cross_ent_u = cross_ent_loss(preds[data_ind],[lab[data_ind]]) # get 1x10
+        # cross_ent_u = cross_ent_u[perturb_ind[1]]
+
+        perturb(weights_softmax, epsilon, perturb_ind)
+        grad = abs(cross_ent_u - cross_ent_l)/float(epsilon)
+        g_diff.append(np.sqrt(np.sum(grad - grad_real)**2))
+
+
+        # if perturb_wij:
+        # grad_real = self.sigmoid_layer.grad(self.softmax_layer,lab,preds, data_ind)
+        grad_real = self.softmax_layer.grad([lab[data_ind]],preds[data_ind], data_ind) # 65x10
+        grad_ind = random.randrange(1,65)
+
+        shape_perturb = weights_sigmoid.shape
+        perturb_ind = [random.randrange(0,shape_perturb[0]),random.randrange(0,shape_perturb[1])]
+        grad_real = grad_real[grad_ind] # now this is 1x10
+        # this is one number, corresponding to i and j
+
+        perturb(weights_sigmoid, epsilon, perturb_ind)
+        intermediate = self.sigmoid_layer.forward_prop(dat)
+        preds = self.softmax_layer.forward_prop(intermediate)
+        cross_ent_l = cross_ent_loss(preds[data_ind],[lab[data_ind]]) # get 1x10
+        cross_ent_l = cross_ent_l
+
+        perturb(weights_sigmoid, -2*epsilon, perturb_ind)
+        intermediate = self.sigmoid_layer.forward_prop(dat)
+        preds = self.softmax_layer.forward_prop(intermediate)
+        cross_ent_u = cross_ent_loss(preds[data_ind],[lab[data_ind]]) # get 1x10
+        cross_ent_u = cross_ent_u
+        grad = (cross_ent_u - cross_ent_l)/epsilon
+        # but this is a 1x 10 vector--confusion....
+        perturb(weights_sigmoid, epsilon, perturb_ind)
+
+        g_diff.append(np.sqrt(np.sum(grad - grad_real)**2))
+        return g_diff
+
     def train(self, iterations, num_hidden, reset_batches=True, epochs_per_batch=1):
         self.train_loss_log = []
         self.train_classification_log = []
@@ -114,6 +176,7 @@ class NetworkRunner(object):
                 preds = self.softmax_layer.forward_prop(intermediate)
 
                 self.softmax_layer.update_weights(eta, l, preds)
+                
                 self.sigmoid_layer.update_weights(self.softmax_layer, eta, l, preds)               
 
             eta = self.update_learning_rate(iteration)
@@ -122,50 +185,8 @@ class NetworkRunner(object):
                                 np.dot(self.softmax_layer.last_input, self.softmax_layer.weights)), l))
             self.train_classification_log.append(evaluate(preds, l))
             d, l = self.get_next_mini_batch(shuffle=True)
-        
-        # compare gradients
-        dat = d
-        epsilon=10**-2
-        data_ind = random.randrange(0,self.minibatch_size)
-        g_diff=[]
-        perturb_wjk=True; perturb_wij=True; 
-        if perturb_wjk:
-            grad_real = self.softmax_layer.grad(l,preds)
+        self.grad_diff_f = np.empty((0,2))
+        for i in range(10):
+            grad_diff = self.compare_gradients(10**-2, d, l, self.sigmoid_layer.weights, self.softmax_layer.weights)
+            self.grad_diff_f = np.vstack((self.grad_diff_f, grad_diff))
 
-            num_loss=[]
-            shape_perturb = self.softmax_layer.weights.shape
-            perturb_ind = [random.randrange(0,shape_perturb[0]),random.randrange(0,shape_perturb[1])]
-
-            perturb(self.softmax_layer.weights, epsilon, perturb_ind)
-            preds = self.softmax_layer.forward_prop(intermediate)
-            numerical_lossL = norm_loss_one(preds[data_ind],l[data_ind],range(0,10))
-
-            perturb(self.softmax_layer.weights, -2*epsilon, perturb_ind)
-            preds = self.softmax_layer.forward_prop(intermediate)
-            numerical_lossH = norm_loss_one(preds[data_ind],l[data_ind],range(0,10))
-            grad = (numerical_lossL - numerical_lossH )/float(2*epsilon)
-
-            perturb(self.softmax_layer.weights, epsilon, perturb_ind)
-            g_diff.append(float(abs(grad-grad_real[perturb_ind[0]][perturb_ind[1]])))
-
-        if perturb_wij:
-            grad_real = self.sigmoid_layer.grad(self.softmax_layer,l,preds)
-
-            num_loss=[]
-            shape_perturb = intermediate.shape
-            perturb_ind = [random.randrange(0,shape_perturb[0]),random.randrange(0,shape_perturb[1])]
-
-            perturb(self.sigmoid_layer.weights, epsilon, perturb_ind)
-            intermediate = self.sigmoid_layer.forward_prop(d)
-            preds = self.softmax_layer.forward_prop(intermediate)
-            numerical_lossL = norm_loss_one(preds[data_ind],l[data_ind],range(0,10))
-
-            perturb(self.sigmoid_layer.weights, -2*epsilon, perturb_ind)
-            intermediate = self.sigmoid_layer.forward_prop(d)
-            preds = self.softmax_layer.forward_prop(intermediate)
-            numerical_lossH = norm_loss_one(preds[data_ind],l[data_ind],range(0,10))
-
-            grad = (numerical_lossL - numerical_lossH )/float(2*epsilon)
-            perturb(self.sigmoid_layer.weights, epsilon, perturb_ind)
-            g_diff.append(float(abs(grad-grad_real[perturb_ind[0]][perturb_ind[1]])))
-        print(g_diff)

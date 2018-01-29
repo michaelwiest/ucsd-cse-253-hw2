@@ -34,9 +34,6 @@ class SigmoidLayer(object):
         delta_k = SoftmaxLayer.get_delta_k(labels, predictions)
         wjk = SoftmaxLayer.prev_weights
 
-        # k = 10; wjk = 65*10
-
-        # Ignore the first row because it is bias.
         return sigma_d(aj) * (np.dot(delta_k, np.transpose(wjk)))[:, 1:]
 
     def update_weights(self, SoftmaxLayer, eta, labels, predictions):
@@ -44,6 +41,10 @@ class SigmoidLayer(object):
         self.weights = self.weights + eta * np.dot(np.transpose(self.last_input), delta_j)
         return self.weights
 
-    def grad(self, SoftmaxLayer, labels, predictions):
+    def grad(self, SoftmaxLayer, labels, predictions, data_ind):
         delta_j = self.get_delta_j(SoftmaxLayer, predictions, labels)
-        return np.dot(np.transpose(self.last_input), delta_j)
+        delta_j = delta_j[data_ind]
+        delta_j = delta_j.reshape((1,delta_j.shape[0]))
+        last_in = self.last_input[data_ind]
+        last_in = last_in.reshape((last_in.shape[0],1))
+        return np.dot(last_in, delta_j)
