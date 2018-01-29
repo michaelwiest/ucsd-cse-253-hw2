@@ -12,7 +12,7 @@ np.set_printoptions(threshold=np.nan)
 
 class NeuralNetwork(object):
     def __init__(self, mnist_directory, lr0=None, lr_dampener=None,
-                 minibatch_size=128):
+                 minibatch_size=128, magic_sigma=False):
         self.mnist_directory = mnist_directory
         self.lr_dampener = lr_dampener
         self.holdout_data = None
@@ -29,6 +29,9 @@ class NeuralNetwork(object):
         self.minibatch_size = minibatch_size
 
         self.forward_props = []
+        self.min_loss_holdout = np.inf
+        self.min_loss_weights = None
+        self.magic_sigma = magic_sigma
 
     def load_data(self, mnist_directory):
         mndata = MNIST(mnist_directory)
@@ -94,24 +97,42 @@ class NeuralNetwork(object):
 
         return td, tl
 
-    def log(self, labels):
+    def log(self, labels, iteration):
+        self.iterations.append(iteration)
         self.train_loss_log.append(norm_loss_function(
                          self.layers[-1].last_output, labels))
         self.train_classification_log.append(evaluate(self.layers[-1].last_output, labels))
 
+        self.__forward_prop(self.test_data)
+        self.test_loss_log.append(norm_loss_function(
+                         self.layers[-1].last_output, self.test_labels))
+        self.test_classification_log.append(evaluate(self.layers[-1].last_output, self.test_labels))
+
+
         if self.holdout_data is not None:
             # Do forward prop with the holdout data.
             self.__forward_prop(self.holdout_data)
-            self.holdout_loss_log.append(norm_loss_function(
-                             self.layers[-1].last_output, self.holdout_labels))
+            holdout_loss = norm_loss_function(
+                             self.layers[-1].last_output, self.holdout_labels)
+            self.holdout_loss_log.append(holdout_loss)
             self.holdout_classification_log.append(evaluate(self.layers[-1].last_output, self.holdout_labels))
+
+            if holdout_loss <  self.min_loss_holdout:
+                self.min_loss_holdout = holdout_loss
+                self.min_loss_weights = [l.weights for l in self.layers]
 
 
     def __build_layers(self, hidden_layers):
+        if self.magic_sigma:
+            fxn = magic_sigma
+            fxn_d = magic_sigma_d
+        else:
+            fxn = sigma
+            fxn_d = sigma_d
         self.layers = []
-        self.layers.append(SigmoidLayer(self.train_data.shape[1] + 1, hidden_layers[0]))
+        self.layers.append(SigmoidLayer(self.train_data.shape[1] + 1, hidden_layers[0], fxn, fxn_d))
         for i in xrange(len(hidden_layers) - 1):
-            self.layers.append(SigmoidLayer(hidden_layers[i] + 1, hidden_layers[i + 1]))
+            self.layers.append(SigmoidLayer(hidden_layers[i] + 1, hidden_layers[i + 1], fxn, fxn_d))
         self.layers.append(SoftmaxLayer(hidden_layers[-1] + 1, self.num_categories))
 
 
@@ -133,10 +154,13 @@ class NeuralNetwork(object):
 
     def train(self, iterations, hidden_layers, reset_batches=True, epochs_per_batch=1):
         # Reset logs.
+        self.iterations = []
         self.train_loss_log = []
         self.train_classification_log = []
         self.holdout_loss_log = []
         self.holdout_classification_log = []
+        self.test_loss_log = []
+        self.test_classification_log = []
         if reset_batches:
             self.minibatch_index = 0
 
@@ -147,7 +171,8 @@ class NeuralNetwork(object):
         for iteration in xrange(iterations):
             self.__forward_prop(data)
             self.__back_prop(labels, eta)
-            self.log(labels)
+            if iteration % 50 == 0:
+                self.log(labels, iteration)
 
             eta = self.update_learning_rate(iteration)
             data, labels = self.get_next_mini_batch(shuffle=True)
