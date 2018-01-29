@@ -19,9 +19,13 @@ def softmax(x):
 
 
 def get_one_hot(labels):
-    potential_vals = list(set(labels))
-    potential_vals.sort()
-    return np.array([[int(l == p) for p in potential_vals] for l in labels])
+    if len(labels)>1:
+        potential_vals = list(set(labels))
+        potential_vals.sort()
+        hot = np.array([[int(l == p) for p in potential_vals] for l in labels])
+    else:
+        hot = np.array([int(labels[0] == p) for p in range(10)])
+    return hot
 
 
 def norm_loss_function(x, y):
@@ -43,3 +47,10 @@ def evaluate(x, labels):
         # print y
         # print pred
         return 100.0 - 100.0 * np.sum((pred != labels).astype(int)) / (1.0 * x.shape[0])
+
+def perturb(input, epsilon, idx):
+    input[idx[0]][idx[1]] += epsilon
+
+def cross_ent_loss(x,y):
+    y = get_one_hot(y)
+    return y*np.log(x)

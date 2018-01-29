@@ -7,6 +7,7 @@ import random
 from sigmoid_layer import *
 from softmax_layer import *
 import time
+import pdb
 
 np.set_printoptions(threshold=np.nan)
 
@@ -152,7 +153,57 @@ class NeuralNetwork(object):
             eta = self.update_learning_rate(iteration)
             data, labels = self.get_next_mini_batch(shuffle=True)
 
+    def gradient_difference(self, epsilon, iterations, weights, grad_func, bias=False):
+        data, labels = self.get_next_mini_batch()
+        self.__forward_prop(data)
+        preds = self.layers[-1].last_output
 
+        data_ind = random.randrange(0,self.minibatch_size)
+        shape_perturb = weights.shape
+        perturb_ind = [random.randrange(1,shape_perturb[0]),random.randrange(0,shape_perturb[1])]
+        # 65x10 for wjk, 785x64 for wij
+        if bias:
+            perturb_ind = [0,random.randrange(0,shape_perturb[1])]
+        grad_real = grad_func([labels[data_ind]],preds[data_ind], data_ind)
+        grad_real = grad_real[perturb_ind[0]]
+
+        perturb(weights, epsilon, perturb_ind)
+        self.__forward_prop(data)
+        # if weights.shape[0] == 765:
+        #     intermediate = self.sigmoid_layer.forward_prop(dat)
+        # preds = self.softmax_layer.forward_prop(intermediate)
+        preds = self.layers[-1].last_output
+        cross_ent_l = cross_ent_loss(preds[data_ind],[labels[data_ind]]) # get 1x10
+        perturb(weights_softmax, -2*epsilon, perturb_ind)
+        # if weights.shape[0] == 765:
+        #     intermediate = self.sigmoid_layer.forward_prop(dat)
+        self.__forward_prop(data)
+        # preds = self.softmax_layer.forward_prop(intermediate)
+        preds = self.layers[-1].last_output
+        cross_ent_u = cross_ent_loss(preds[data_ind],[labels[data_ind]]) # get 1x10
+
+        perturb(weights_softmax, epsilon, perturb_ind)
+        grad = abs(cross_ent_u - cross_ent_l)/float(2*epsilon)
+        self.g_diff = np.sqrt(np.sum(grad - grad_real)**2)
+
+    def evaluate_gradient(self, iters, epsilon):
+        iters = 30
+        epsilon = 10**-2
+        grad_diff=[]
+        grad_diff_f = np.empty((0,iters))
+        gd_final = np.empty((0,iters))
+        tf = [False, True]
+        iterate = 0
+        for i in range(len(nn.layers)):
+            for boolean in tf:
+                while iterate < iters:
+                    nn.layers[i].set_random_weights
+                    self.gradient_difference(epsilon, iterations, nn.layers[i].weights, nn.layers[i].grad, bias=boolean)
+                    if self.g_diff < epsilon**-2:
+                        iterate +=1
+                        grad_diff.append(self.g_diff)
+                grad_diff_f = np.vstack((grad_diff_f, grad_diff))
+            self.gd_final = np.vstack(self.gd_final, grad_diff_f)
 
 
 

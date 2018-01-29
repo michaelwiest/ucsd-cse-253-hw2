@@ -44,3 +44,10 @@ class SoftmaxLayer(object):
         self.prev_weights = self.weights
         self.weights = self.weights + eta * np.dot(np.transpose(self.last_input), delta)
         return self.weights
+
+    def grad(self, labels, predictions, data_ind):
+        delta_k = self.get_delta_k(predictions, labels)
+        delta_k = delta_k.reshape((1,delta_k.shape[0]))
+        last_in = self.last_input[data_ind]
+        last_in = last_in.reshape((last_in.shape[0],1))
+        return np.dot(last_in, delta_k)
