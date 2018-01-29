@@ -3,10 +3,7 @@ from helper import *
 
 class SigmoidLayer(object):
     def __init__(self, num_in, num_out):
-        # num out is 64
         self.num_out = num_out
-        # self.eta = eta
-        # num in is 785
         self.num_in = num_in
         self.weights = None
 

@@ -4,12 +4,8 @@ from helper import *
 
 class SoftmaxLayer(object):
     def __init__(self, num_in, num_out):
-        # self._setup()
-        # num_in should be 65
         self.num_in = num_in
-        # num_out should be 10
         self.num_out = num_out
-        # self.labels = labels
         self.weights = None
 
     def set_random_weights(self):

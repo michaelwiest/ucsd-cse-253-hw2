@@ -14,15 +14,14 @@ iters = 1000
 num_hidden = [64]
 nn.train(iters, num_hidden)
 
-# plt.plot(xrange(iters), nn.train_loss_log)
-# plt.show()
-#
-# plt.plot(xrange(iters), nn.train_classification_log)
-# plt.show()
 
+plt.plot(xrange(iters), nn.train_loss_log, alpha=0.7, label='Train')
+plt.plot(xrange(iters), nn.holdout_loss_log, alpha=0.7, label='Holdout')
 
-plt.plot(xrange(iters), nn.holdout_loss_log)
+plt.legend(loc='upper right')
 plt.show()
 
-plt.plot(xrange(iters), nn.holdout_classification_log)
+plt.plot(xrange(iters), nn.train_classification_log, alpha=0.7, label='Train')
+plt.plot(xrange(iters), nn.holdout_classification_log, alpha=0.7, label='Holdout')
+plt.legend(loc='lower right')
 plt.show()
