@@ -5,13 +5,13 @@ from softmax_layer import *
 from helper import *
 import pylab as plt
 
-nn = NeuralNetwork('mnist', lr_dampener=2000, magic_sigma=False)
+nn = NeuralNetwork('mnist', lr_dampener=2000, magic_sigma=True)
 nn.assign_holdout(10)
 d, l = nn.get_next_mini_batch()
 
 
 iters = 2000
-num_hidden = [32, 32]
+num_hidden = [64]
 nn.train(iters, num_hidden)
 
 

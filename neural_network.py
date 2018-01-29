@@ -124,6 +124,7 @@ class NeuralNetwork(object):
 
     def __build_layers(self, hidden_layers):
         if self.magic_sigma:
+            print('Using magic tanh function.')
             fxn = magic_sigma
             fxn_d = magic_sigma_d
         else:
