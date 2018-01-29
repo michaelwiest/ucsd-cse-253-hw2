@@ -11,7 +11,7 @@ d, l = nn.get_next_mini_batch()
 
 
 iters = 2000
-num_hidden = [64]
+num_hidden = [32, 32]
 nn.train(iters, num_hidden)
 
 
