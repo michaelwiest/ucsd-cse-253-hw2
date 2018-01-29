@@ -107,7 +107,7 @@ class NetworkRunner(object):
         # only find gradient for one data point
         grad_real = self.softmax_layer.grad([lab[data_ind]],preds[data_ind], data_ind) # 65x10
         # grad_real = grad_real[perturb_ind[0]][perturb_ind[1]] # 1
-        grad_real = grad_real[perturb_ind[0]]
+        grad_real = grad_real[perturb_ind[0]] # this is jth indice in gradient
 
         g_diff=[]
         num_loss=[]
@@ -124,10 +124,10 @@ class NetworkRunner(object):
         # cross_ent_u = cross_ent_u[perturb_ind[1]]
 
         perturb(weights_softmax, epsilon, perturb_ind)
-        grad = abs(cross_ent_u - cross_ent_l)/float(epsilon)
+        grad = abs(cross_ent_u - cross_ent_l)/float(2*epsilon)
         g_diff.append(np.sqrt(np.sum(grad - grad_real)**2))
 
-
+        #####################################################
         # if perturb_wij:
         # grad_real = self.sigmoid_layer.grad(self.softmax_layer,lab,preds, data_ind)
         grad_real = self.softmax_layer.grad([lab[data_ind]],preds[data_ind], data_ind) # 65x10
@@ -149,11 +149,13 @@ class NetworkRunner(object):
         preds = self.softmax_layer.forward_prop(intermediate)
         cross_ent_u = cross_ent_loss(preds[data_ind],[lab[data_ind]]) # get 1x10
         cross_ent_u = cross_ent_u
-        grad = (cross_ent_u - cross_ent_l)/epsilon
+        grad = (cross_ent_u - cross_ent_l)/(2*epsilon)
         # but this is a 1x 10 vector--confusion....
         perturb(weights_sigmoid, epsilon, perturb_ind)
 
         g_diff.append(np.sqrt(np.sum(grad - grad_real)**2))
+
+        ##############################################################
         return g_diff
 
     def train(self, iterations, num_hidden, reset_batches=True, epochs_per_batch=1):
@@ -185,8 +187,11 @@ class NetworkRunner(object):
                                 np.dot(self.softmax_layer.last_input, self.softmax_layer.weights)), l))
             self.train_classification_log.append(evaluate(preds, l))
             d, l = self.get_next_mini_batch(shuffle=True)
-        self.grad_diff_f = np.empty((0,2))
-        for i in range(10):
-            grad_diff = self.compare_gradients(10**-2, d, l, self.sigmoid_layer.weights, self.softmax_layer.weights)
-            self.grad_diff_f = np.vstack((self.grad_diff_f, grad_diff))
 
+        self.grad_diff_f = np.empty((0,2))
+        ii = 0
+        while ii<30:
+            grad_diff = self.compare_gradients(10**-2, d, l, self.sigmoid_layer.weights, self.softmax_layer.weights)
+            if grad_diff[0]<10**-4 and grad_diff[1]<10**-4:
+                ii+=1
+                self.grad_diff_f = np.vstack((self.grad_diff_f, grad_diff))
