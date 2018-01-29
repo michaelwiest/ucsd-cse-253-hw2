@@ -1,20 +1,27 @@
 from __future__ import print_function
-from network_runner import *
-from hidden_to_output import *
-from visible_to_hidden import *
+from neural_network import *
+from sigmoid_layer import *
+from softmax_layer import *
 from helper import *
 import pylab as plt
 
-nr = NetworkRunner('mnist', lr_dampener=10000)
-d, l = nr.get_next_mini_batch()
+nn = NeuralNetwork('mnist', lr_dampener=10)
+nn.assign_holdout(10)
+d, l = nn.get_next_mini_batch()
 
 
-iters = 10000
-num_hidden = 64
-nr.train(iters, num_hidden)
+iters = 1000
+num_hidden = [64]
+nn.train(iters, num_hidden)
 
-plt.plot(xrange(iters), nr.train_loss_log)
+
+plt.plot(xrange(iters), nn.train_loss_log, alpha=0.7, label='Train')
+plt.plot(xrange(iters), nn.holdout_loss_log, alpha=0.7, label='Holdout')
+
+plt.legend(loc='upper right')
 plt.show()
 
-plt.plot(xrange(iters), nr.train_classification_log)
+plt.plot(xrange(iters), nn.train_classification_log, alpha=0.7, label='Train')
+plt.plot(xrange(iters), nn.holdout_classification_log, alpha=0.7, label='Holdout')
+plt.legend(loc='lower right')
 plt.show()

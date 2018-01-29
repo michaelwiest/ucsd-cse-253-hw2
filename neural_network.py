@@ -4,13 +4,13 @@ import numpy as np
 import pylab as plt
 from helper import *
 import random
-from visible_to_hidden import *
-from hidden_to_output import *
+from sigmoid_layer import *
+from softmax_layer import *
 import time
 
 np.set_printoptions(threshold=np.nan)
 
-class NetworkRunner(object):
+class NeuralNetwork(object):
     def __init__(self, mnist_directory, lr0=None, lr_dampener=None,
                  minibatch_size=128):
         self.mnist_directory = mnist_directory
@@ -22,12 +22,13 @@ class NetworkRunner(object):
         self.load_data(self.mnist_directory)
 
         if lr0 == None:
-            self.lr0 = 100.0 / self.train_data.shape[0]
+            self.lr0 = 500.0 / self.train_data.shape[0]
         else:
             self.lr0 = lr0
         self.minibatch_index = 0
         self.minibatch_size = minibatch_size
 
+        self.forward_props = []
 
     def load_data(self, mnist_directory):
         mndata = MNIST(mnist_directory)
@@ -93,31 +94,68 @@ class NetworkRunner(object):
 
         return td, tl
 
-    def train(self, iterations, num_hidden, reset_batches=True, epochs_per_batch=1):
+    def log(self, labels):
+        self.train_loss_log.append(norm_loss_function(
+                         self.layers[-1].last_output, labels))
+        self.train_classification_log.append(evaluate(self.layers[-1].last_output, labels))
+
+        if self.holdout_data is not None:
+            # Do forward prop with the holdout data.
+            self.__forward_prop(self.holdout_data)
+            self.holdout_loss_log.append(norm_loss_function(
+                             self.layers[-1].last_output, self.holdout_labels))
+            self.holdout_classification_log.append(evaluate(self.layers[-1].last_output, self.holdout_labels))
+
+
+    def __build_layers(self, hidden_layers):
+        self.layers = []
+        self.layers.append(SigmoidLayer(self.train_data.shape[1] + 1, hidden_layers[0]))
+        for i in xrange(len(hidden_layers) - 1):
+            self.layers.append(SigmoidLayer(hidden_layers[i] + 1, hidden_layers[i + 1]))
+        self.layers.append(SoftmaxLayer(hidden_layers[-1] + 1, self.num_categories))
+
+
+    def __forward_prop(self, data, save=True):
+        temp = data
+        for layer in self.layers:
+            temp = layer.forward_prop(temp, save_input=save, save_output=save)
+            # self.forward_props.append(temp)
+
+    def __back_prop(self, labels, eta):
+        future_delta = None
+        future_weights = None
+        for layer in reversed(self.layers):
+            layer.update_weights(future_delta, eta, labels, layer.last_output,
+                                 future_weights)
+            future_delta = layer.delta
+            future_weights = layer.prev_weights
+
+
+    def train(self, iterations, hidden_layers, reset_batches=True, epochs_per_batch=1):
+        # Reset logs.
         self.train_loss_log = []
         self.train_classification_log = []
+        self.holdout_loss_log = []
+        self.holdout_classification_log = []
         if reset_batches:
             self.minibatch_index = 0
 
         eta = self.lr0
-
-        d, l = self.get_next_mini_batch()
-        self.sigmoid_layer = SigmoidLayer(self.train_data.shape[1] + 1, num_hidden)
-        self.softmax_layer = SoftmaxLayer(num_hidden + 1, self.num_categories)
+        data, labels = self.get_next_mini_batch()
+        self.__build_layers(hidden_layers)
 
         for iteration in xrange(iterations):
-
-            for i in xrange(epochs_per_batch):
-                intermediate = self.sigmoid_layer.forward_prop(d)
-
-                preds = self.softmax_layer.forward_prop(intermediate)
-
-                self.softmax_layer.update_weights(eta, l, preds)
-                self.sigmoid_layer.update_weights(self.softmax_layer, eta, l, preds)
+            self.__forward_prop(data)
+            self.__back_prop(labels, eta)
+            self.log(labels)
 
             eta = self.update_learning_rate(iteration)
-            self.train_loss_log.append(norm_loss_function(
-                             softmax(
-                                np.dot(self.softmax_layer.last_input, self.softmax_layer.weights)), l))
-            self.train_classification_log.append(evaluate(preds, l))
-            d, l = self.get_next_mini_batch(shuffle=True)
+            data, labels = self.get_next_mini_batch(shuffle=True)
+
+
+
+
+
+
+
+pass
