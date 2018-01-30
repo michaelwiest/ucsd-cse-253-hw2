@@ -13,6 +13,7 @@ class SoftmaxLayer(object):
                                                               self.num_out))
         dev = 1.0 / (np.sqrt(self.num_in))
         self.prev_weights = np.zeros((self.num_in, self.num_out))
+        self.weight_delta = np.zeros((self.num_in, self.num_out))
         self.weights = (np.random.normal(0, dev, (self.num_in, self.num_out)))
 
     def forward_prop(self, input_data, add_bias=True, save_input=True,
@@ -39,8 +40,13 @@ class SoftmaxLayer(object):
         return self.delta
 
     # future_delta isn't used. It's just for ease of calling the function.
-    def update_weights(self, future_delta, eta, labels, predictions, future_weights):
+    def update_weights(self, future_delta, eta, labels, predictions,
+                       future_weights, alpha=None):
         delta = self.get_delta(predictions, labels)
         self.prev_weights = self.weights
-        self.weights = self.weights + eta * np.dot(np.transpose(self.last_input), delta)
+        if alpha is not None:
+            self.weights = self.weights + (-alpha * self.weight_delta + eta * np.dot(np.transpose(self.last_input), delta))
+        else:
+            self.weights = self.weights + eta * np.dot(np.transpose(self.last_input), delta)
+        self.weight_delta = self.weights - self.prev_weights
         return self.weights

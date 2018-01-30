@@ -12,7 +12,7 @@ np.set_printoptions(threshold=np.nan)
 
 class NeuralNetwork(object):
     def __init__(self, mnist_directory, lr0=None, lr_dampener=None,
-                 minibatch_size=128, magic_sigma=False):
+                 minibatch_size=128, magic_sigma=False, alpha=None):
         self.mnist_directory = mnist_directory
         self.lr_dampener = lr_dampener
         self.holdout_data = None
@@ -28,10 +28,11 @@ class NeuralNetwork(object):
         self.minibatch_index = 0
         self.minibatch_size = minibatch_size
 
-        self.forward_props = []
         self.min_loss_holdout = np.inf
         self.min_loss_weights = None
+
         self.magic_sigma = magic_sigma
+        self.alpha = alpha
 
     def load_data(self, mnist_directory):
         mndata = MNIST(mnist_directory)
@@ -141,14 +142,14 @@ class NeuralNetwork(object):
         temp = data
         for layer in self.layers:
             temp = layer.forward_prop(temp, save_input=save, save_output=save)
-            # self.forward_props.append(temp)
+
 
     def __back_prop(self, labels, eta):
         future_delta = None
         future_weights = None
         for layer in reversed(self.layers):
             layer.update_weights(future_delta, eta, labels, layer.last_output,
-                                 future_weights)
+                                 future_weights, alpha=self.alpha)
             future_delta = layer.delta
             future_weights = layer.prev_weights
 
