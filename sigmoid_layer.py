@@ -43,13 +43,13 @@ class SigmoidLayer(object):
         self.weights = self.weights + eta * np.dot(np.transpose(self.last_input), delta)
         return self.weights
 
-    def grad(self, delta, last_in, data_ind):
-        # aj = np.dot(self.last_input, self.weights)
-        # sigma_d(aj) * (np.dot(future_delta, np.transpose(future_weights)))[:, 1:]
-        delta_j = delta
-        delta_j = delta_j[data_ind]
-        delta_j = delta_j.reshape((1,delta_j.shape[0]))
-        last_in = last_in[data_ind]
-        last_in = last_in.reshape((last_in.shape[0],1))
-        grad_val = np.dot(last_in, delta_j)
-        return grad_val
+    # def get_grad(self, delta, last_in, data_ind):
+    #     # aj = np.dot(self.last_input, self.weights)
+    #     # sigma_d(aj) * (np.dot(future_delta, np.transpose(future_weights)))[:, 1:]
+    #     delta_j = delta
+    #     delta_j = delta_j[data_ind]
+    #     delta_j = delta_j.reshape((1,delta_j.shape[0]))
+    #     last_in = last_in[data_ind]
+    #     last_in = last_in.reshape((last_in.shape[0],1))
+    #     grad_val = np.dot(last_in, delta_j)
+    #     return grad_val
