@@ -22,7 +22,7 @@ class NeuralNetwork(object):
         self.load_data(self.mnist_directory)
 
         if lr0 == None:
-            self.lr0 = 500.0 / self.train_data.shape[0]
+            self.lr0 = 150.0 / self.train_data.shape[0]
         else:
             self.lr0 = lr0
         self.minibatch_index = 0
@@ -104,7 +104,7 @@ class NeuralNetwork(object):
                          self.layers[-1].last_output, labels))
         self.train_classification_log.append(evaluate(self.layers[-1].last_output, labels))
 
-        self.__forward_prop(self.test_data)
+        self.forward_prop(self.test_data)
         self.test_loss_log.append(norm_loss_function(
                          self.layers[-1].last_output, self.test_labels))
         self.test_classification_log.append(evaluate(self.layers[-1].last_output, self.test_labels))
@@ -112,7 +112,7 @@ class NeuralNetwork(object):
 
         if self.holdout_data is not None:
             # Do forward prop with the holdout data.
-            self.__forward_prop(self.holdout_data)
+            self.forward_prop(self.holdout_data)
             holdout_loss = norm_loss_function(
                              self.layers[-1].last_output, self.holdout_labels)
             self.holdout_loss_log.append(holdout_loss)
@@ -121,6 +121,10 @@ class NeuralNetwork(object):
             if holdout_loss <  self.min_loss_holdout:
                 self.min_loss_holdout = holdout_loss
                 self.min_loss_weights = [l.weights for l in self.layers]
+
+    def set_to_optimal_weights(self):
+        for i in xrange(len(self.layers)):
+            self.layers[i].weights = self.min_loss_weights[i]
 
 
     def __build_layers(self, hidden_layers):
@@ -138,13 +142,13 @@ class NeuralNetwork(object):
         self.layers.append(SoftmaxLayer(hidden_layers[-1] + 1, self.num_categories))
 
 
-    def __forward_prop(self, data, save=True):
+    def forward_prop(self, data, save=True):
         temp = data
         for layer in self.layers:
             temp = layer.forward_prop(temp, save_input=save, save_output=save)
 
 
-    def __back_prop(self, labels, eta):
+    def back_prop(self, labels, eta):
         future_delta = None
         future_weights = None
         for layer in reversed(self.layers):
@@ -171,8 +175,8 @@ class NeuralNetwork(object):
         self.__build_layers(hidden_layers)
 
         for iteration in xrange(iterations):
-            self.__forward_prop(data)
-            self.__back_prop(labels, eta)
+            self.forward_prop(data)
+            self.back_prop(labels, eta)
             if iteration % 50 == 0:
                 self.log(labels, iteration)
 
