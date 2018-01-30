@@ -40,17 +40,24 @@ class SigmoidLayer(object):
         self.delta = self.fxn_d(aj) * (np.dot(future_delta, np.transpose(future_weights)))[:, 1:]
         return self.delta
 
+    def get_gradient(self):
+        self.gradient = np.dot(np.transpose(self.last_input), self.delta)
+        return self.gradient
+
     # labels and predictions aren't used. Just for ease of calling.
     def update_weights(self, future_delta, eta, labels, predictions,
-                       future_weights, alpha=None):
+                       future_weights, alpha=None, update_weights=True):
         delta = self.get_delta(future_delta, future_weights)
+        gradient = self.get_gradient()
+
         self.prev_weights = self.weights
 
-        if alpha is not None:
-            # print(self.weight_delta)
-            self.weights = self.weights + (-alpha * self.weight_delta + eta * np.dot(np.transpose(self.last_input), delta))
-        else:
-            self.weights = self.weights + eta * np.dot(np.transpose(self.last_input), delta)
+        if update_weights:
+            if alpha is not None:
+                # print(self.weight_delta)
+                self.weights = self.weights + (-alpha * self.weight_delta + eta * gradient)
+            else:
+                self.weights = self.weights + eta * gradient
 
-        self.weight_delta = self.weights - self.prev_weights
+            self.weight_delta = self.weights - self.prev_weights
         return self.weights

@@ -39,14 +39,23 @@ class SoftmaxLayer(object):
         self.delta = (labels - predictions)
         return self.delta
 
+    def get_gradient(self):
+        self.gradient = np.dot(np.transpose(self.last_input), self.delta)
+        return self.gradient
+
     # future_delta isn't used. It's just for ease of calling the function.
     def update_weights(self, future_delta, eta, labels, predictions,
-                       future_weights, alpha=None):
+                       future_weights, alpha=None, update_weights=True):
         delta = self.get_delta(predictions, labels)
+        gradient = self.get_gradient()
+
         self.prev_weights = self.weights
-        if alpha is not None:
-            self.weights = self.weights + (-alpha * self.weight_delta + eta * np.dot(np.transpose(self.last_input), delta))
-        else:
-            self.weights = self.weights + eta * np.dot(np.transpose(self.last_input), delta)
-        self.weight_delta = self.weights - self.prev_weights
+
+        if update_weights:
+            if alpha is not None:
+                # print(self.weight_delta)
+                self.weights = self.weights + (-alpha * self.weight_delta + eta * gradient)
+            else:
+                self.weights = self.weights + eta * gradient
+            self.weight_delta = self.weights - self.prev_weights
         return self.weights

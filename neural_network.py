@@ -148,17 +148,19 @@ class NeuralNetwork(object):
             temp = layer.forward_prop(temp, save_input=save, save_output=save)
 
 
-    def back_prop(self, labels, eta):
+    def back_prop(self, labels, eta, update_weights=True):
         future_delta = None
         future_weights = None
         for layer in reversed(self.layers):
             layer.update_weights(future_delta, eta, labels, layer.last_output,
-                                 future_weights, alpha=self.alpha)
+                                 future_weights, alpha=self.alpha,
+                                 update_weights=update_weights)
             future_delta = layer.delta
             future_weights = layer.prev_weights
 
 
-    def train(self, iterations, hidden_layers, reset_batches=True, epochs_per_batch=1):
+    def train(self, iterations, hidden_layers,
+              reset_batches=True):
         # Reset logs.
         self.iterations = []
         self.train_loss_log = []
@@ -182,6 +184,31 @@ class NeuralNetwork(object):
 
             eta = self.update_learning_rate(iteration)
             data, labels = self.get_next_mini_batch(shuffle=True)
+
+    def evaluate_gradient_approximation(self, hidden_layers, layer_index,
+                                        epsilon, num_samples=5):
+        data, labels = self.get_next_mini_batch()
+        self.__build_layers(hidden_layers)
+        self.forward_prop(data)
+        data, labels = self.get_next_mini_batch()
+        i = np.random.randint(self.layers[layer_index].weights.shape[0])
+        j = np.random.randint(self.layers[layer_index].weights.shape[1])
+        # print(i, j)
+        self.back_prop(labels, self.lr0, update_weights=False)
+        real_grad = self.layers[layer_index].gradient[i, j]
+        # Perturb up.
+        self.layers[layer_index].weights[i, j] += epsilon
+        self.forward_prop(data)
+        nl_up = norm_loss_function(self.layers[-1].last_output, labels)
+
+        self.layers[layer_index].weights[i, j] -= epsilon
+        self.forward_prop(data)
+        nl_down = norm_loss_function(self.layers[-1].last_output, labels)
+
+        print(real_grad)
+        print((nl_up - nl_down) / (2 * epsilon))
+
+
 
 
 
