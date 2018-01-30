@@ -6,15 +6,15 @@ from helper import *
 import pylab as plt
 
 nn = NeuralNetwork('mnist',
-                   lr_dampener=2000,
-                   magic_sigma=False
+                   lr_dampener=3000
+                   # , magic_sigma=True
                    # , alpha=0.1
                    )
-nn.assign_holdout(10)
+nn.assign_holdout(16.6)
 d, l = nn.get_next_mini_batch()
 
 
-iters = 3000
+iters = 2500
 num_hidden = [64]
 nn.train(iters, num_hidden)
 
