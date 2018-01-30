@@ -30,15 +30,15 @@ num_hidden = [64]
 
 iters = 30
 epsilon = 10**-2
-pdb.set_trace()
-nn.evaluate_gradient(iters, epsilon)
+nn.evaluate_gradient(iters, epsilon, num_hidden)
 
+pdb.set_trace()
 plt.figure()
 plt.plot(xrange(iters),nn.gd_final[0,:],label='Change wjk')
 plt.ylabel('Gradient Difference')
 plt.xlabel('Iterations')
 plt.plot(xrange(iters),nn.gd_final[1,:], label = 'Change wjk bias')
-plt.plot(xrange(iters),[epsilon**-2]*iters, 'epsilon*10^-2')
+plt.plot(xrange(iters),[epsilon*10**-2]*iters, label = 'epsilon*10^-2')
 plt.plot(xrange(iters),nn.gd_final[2,:],label='Change wij')
 plt.plot(xrange(iters),nn.gd_final[3,:],label='Change wij bias')
 plt.legend()
