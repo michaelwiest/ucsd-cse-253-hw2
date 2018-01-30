@@ -102,13 +102,13 @@ class NeuralNetwork(object):
 
         if self.holdout_data is not None:
             # Do forward prop with the holdout data.
-            self.__forward_prop(self.holdout_data)
+            self.forward_prop(self.holdout_data)
             self.holdout_loss_log.append(norm_loss_function(
                              self.layers[-1].last_output, self.holdout_labels))
             self.holdout_classification_log.append(evaluate(self.layers[-1].last_output, self.holdout_labels))
 
 
-    def __build_layers(self, hidden_layers):
+    def build_layers(self, hidden_layers):
         self.layers = []
         self.layers.append(SigmoidLayer(self.train_data.shape[1] + 1, hidden_layers[0]))
         for i in xrange(len(hidden_layers) - 1):
@@ -116,13 +116,13 @@ class NeuralNetwork(object):
         self.layers.append(SoftmaxLayer(hidden_layers[-1] + 1, self.num_categories))
 
 
-    def __forward_prop(self, data, save=True):
+    def forward_prop(self, data, save=True):
         temp = data
         for layer in self.layers:
             temp = layer.forward_prop(temp, save_input=save, save_output=save)
             # self.forward_props.append(temp)
 
-    def __back_prop(self, labels, eta):
+    def back_prop(self, labels, eta):
         future_delta = None
         future_weights = None
         for layer in reversed(self.layers):
@@ -143,21 +143,23 @@ class NeuralNetwork(object):
 
         eta = self.lr0
         data, labels = self.get_next_mini_batch()
-        self.__build_layers(hidden_layers)
+        self.build_layers(hidden_layers)
 
         for iteration in xrange(iterations):
-            self.__forward_prop(data)
-            self.__back_prop(labels, eta)
+            self.forward_prop(data)
+            self.back_prop(labels, eta)
             self.log(labels)
 
             eta = self.update_learning_rate(iteration)
             data, labels = self.get_next_mini_batch(shuffle=True)
 
-    def gradient_difference(self, epsilon, l_i, grad_func, hidden_layers, bias=False):
+    def gradient_difference(self, epsilon, l_i, grad_func, hidden_layers, bias=False):        
+        # self.train(2,[64])
         data, labels = self.get_next_mini_batch()
-        self.train(2,[64])
-        # self.__build_layers(hidden_layers)
-        # self.__forward_prop(data)
+        self.build_layers(hidden_layers)
+        self.layers[l_i].set_random_weights()
+        self.forward_prop(data)
+
         preds = self.layers[-1].last_output
         data_ind = random.randrange(0,self.minibatch_size)
         weights = self.layers[l_i].weights
@@ -167,23 +169,36 @@ class NeuralNetwork(object):
         if bias:
             perturb_ind = [0,random.randrange(0,shape_perturb[1])]
         # if self.layers[l_i] == self.layers[-1]: # if last layer
-        grad_real = grad_func([labels[data_ind]],preds[data_ind], data_ind, self.layers[-1].last_input)
+        # pdb.set_trace()
+        self.layers[-1].get_delta(preds, labels)
+        grad_real = grad_func(self.layers[-1].delta[data_ind], self.layers[-1].last_input[data_ind])
         # else:
             # future_delta = self.layers[-1].get_delta(preds[data_ind],[labels[data_ind]])
             # future_delta = self.layers[l_i+1].delta
             # grad_real = grad_func(self.layers[l_i].delta, self.layers[l_i].last_input, data_ind)
-        grad_ind = random.randrange(1,self.layers[-1].weights.shape[0])
+        # grad_ind = random.randrange(1,self.layers[-1].weights.shape[0])
+        # grad is 65 x 10
+        # if bias, perturb ind is 0 x 784 or 0 x 10
+        if self.layers[l_i] == self.layers[-1] and bias==False:
+            grad_ind = perturb_ind[1]
+        else:
+            grad_ind = perturb_ind[0]
         grad_real = grad_real[grad_ind]
+        # pdb.set_trace()
+        data, labels = self.get_next_mini_batch()
+        # weights = self.layers[l_i].weights
+
         perturb(weights, epsilon, perturb_ind)
-        self.__forward_prop(data)
+        self.forward_prop(data)
         preds = self.layers[-1].last_output
         cross_ent_l = cross_ent_loss(preds[data_ind],[labels[data_ind]]) # get 1x10
         perturb(weights, -2*epsilon, perturb_ind)
-        self.__forward_prop(data)
+        self.forward_prop(data)
         # preds = self.softmax_layer.forward_prop(intermediate)
         preds = self.layers[-1].last_output
         cross_ent_u = cross_ent_loss(preds[data_ind],[labels[data_ind]]) # get 1x10
         perturb(weights, epsilon, perturb_ind)
+
         grad = abs(cross_ent_u - cross_ent_l)/float(2*epsilon)
         self.g_diff = np.sqrt(np.sum(grad - grad_real)**2)
 
@@ -194,19 +209,20 @@ class NeuralNetwork(object):
         gd_final = np.empty((0,iters))
         tf = [False, True]
         iterate = 0
-        self.__build_layers(hidden_layers)
+        self.build_layers(hidden_layers)
         self.gd_final = np.empty((0,iters))
-        for i in range(len(self.layers)):
+        # for i in range(len(self.layers)):
+        for i in range(1,2):
             grad_diff_f = np.empty((0,iters))
             for boolean in tf:
                 grad_diff=[]
                 iterate = 0
                 while iterate < iters:
                     # self.layers[i].set_random_weights()
-                    try:
-                        self.gradient_difference(epsilon, i, self.layers[-1].grad, hidden_layers, bias=boolean)
-                    except:
-                        pdb.set_trace()
+                    # try:
+                    self.gradient_difference(epsilon, i, self.layers[-1].grad, hidden_layers, bias=boolean)
+                    # except:
+                    #     pdb.set_trace()
                     if self.g_diff < epsilon:
                         iterate +=1
                         grad_diff.append(self.g_diff)
@@ -214,6 +230,7 @@ class NeuralNetwork(object):
                     grad_diff_f = np.vstack((grad_diff_f, grad_diff))
                 except:
                     pdb.set_trace()
+            pdb.set_trace()
             self.gd_final = np.vstack((self.gd_final, grad_diff_f))
 
 
