@@ -8,15 +8,17 @@ import pylab as plt
 nn = NeuralNetwork('mnist',
                    lr_dampener=1000
                    # , magic_sigma=True
-                   # , alpha=0.1
+                   # , alpha=0.9
                    )
 nn.assign_holdout(16.6)
-d, l = nn.get_next_mini_batch()
+# d, l = nn.get_next_mini_batch()
 
 
 iters = 3000
 num_hidden = [64]
-nn.train(iters, num_hidden)
+nn.train(iters, num_hidden
+        # , shuffle_perc=80.0
+        )
 nn.set_to_optimal_weights()
 nn.forward_prop(nn.test_data)
 optimal_error = evaluate(nn.layers[-1].last_output, nn.test_labels)

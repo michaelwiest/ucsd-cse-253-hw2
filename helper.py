@@ -25,7 +25,7 @@ def softmax(x):
 
 
 def get_one_hot(labels):
-    potential_vals = list(set(labels))
+    potential_vals = list(xrange(10))
     potential_vals.sort()
     return np.array([[int(l == p) for p in potential_vals] for l in labels])
 

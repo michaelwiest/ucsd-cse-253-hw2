@@ -34,6 +34,7 @@ class NeuralNetwork(object):
         self.magic_sigma = magic_sigma
         self.alpha = alpha
 
+
     def load_data(self, mnist_directory):
         mndata = MNIST(mnist_directory)
         tr_data, tr_labels = mndata.load_training()
@@ -50,6 +51,7 @@ class NeuralNetwork(object):
         self.possible_categories = list(set(self.train_labels))
         self.possible_categories.sort()
         self.num_categories = len(self.possible_categories)
+
         print('Loaded data...')
 
     def subset_data(self, train_amount, test_amount):
@@ -81,20 +83,35 @@ class NeuralNetwork(object):
         self.train_labels = self.train_labels[:-num_held]
         self.holdout_data = self.train_data[-num_held:]
         self.holdout_labels = self.train_labels[-num_held:]
+
+        self.character_indices = []
+        for category in self.possible_categories:
+            self.character_indices.append([i for i, x in enumerate(self.train_labels) if x == category])
         print('Assigned holdout data')
 
-    def get_next_mini_batch(self, shuffle=False):
-        if not shuffle:
-            if (self.minibatch_index + 1) * self.minibatch_size > self.train_data.shape[0]:
-                self.minibatch_index = 0
+    def get_next_mini_batch(self, shuffle_perc=None):
+        '''
+        shuffle_perc specifies what percentage of the data are from a particular
+        category at a given step. The remaining percentage are taken from all
+        possible categories
+        '''
 
-            td = self.train_data[self.minibatch_index * self.minibatch_size : (self.minibatch_index + 1) * self.minibatch_size]
-            tl = self.train_labels[self.minibatch_index * self.minibatch_size : (self.minibatch_index + 1) * self.minibatch_size]
-            self.minibatch_index += 1
-        else:
+        if shuffle_perc is None:
             indices = random.sample(xrange(self.train_data.shape[0]), self.minibatch_size)
             td = self.train_data[indices]
             tl = self.train_labels[indices]
+        else:
+
+            shuffle_perc /= 100.0
+            if self.minibatch_index >= len(self.character_indices):
+                self.minibatch_index = 0
+            indices1 = random.sample(xrange(len(self.character_indices[self.minibatch_index])), int(shuffle_perc * self.minibatch_size))
+            indices2 = random.sample(xrange(self.train_data.shape[0]), int((1-shuffle_perc) * self.minibatch_size))
+            td1 = self.train_data[indices1]
+            td = np.concatenate((td1, self.train_data[indices2]), axis=0)
+            tl1 = self.train_labels[indices1]
+            tl = np.concatenate((tl1, self.train_labels[indices2]), axis=0)
+            self.minibatch_index += 1
 
         return td, tl
 
@@ -158,7 +175,7 @@ class NeuralNetwork(object):
             future_weights = layer.prev_weights
 
 
-    def train(self, iterations, hidden_layers, reset_batches=True, epochs_per_batch=1):
+    def train(self, iterations, hidden_layers, shuffle_perc=None):
         # Reset logs.
         self.iterations = []
         self.train_loss_log = []
@@ -167,11 +184,11 @@ class NeuralNetwork(object):
         self.holdout_classification_log = []
         self.test_loss_log = []
         self.test_classification_log = []
-        if reset_batches:
-            self.minibatch_index = 0
+        # if reset_batches:
+        #     self.minibatch_index = 0
 
         eta = self.lr0
-        data, labels = self.get_next_mini_batch()
+        data, labels = self.get_next_mini_batch(shuffle_perc=shuffle_perc)
         self.__build_layers(hidden_layers)
 
         for iteration in xrange(iterations):
@@ -181,7 +198,7 @@ class NeuralNetwork(object):
                 self.log(labels, iteration)
 
             eta = self.update_learning_rate(iteration)
-            data, labels = self.get_next_mini_batch(shuffle=True)
+            data, labels = self.get_next_mini_batch(shuffle_perc=shuffle_perc)
 
 
 
