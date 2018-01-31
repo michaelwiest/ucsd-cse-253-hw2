@@ -16,7 +16,7 @@ d, l = nn.get_next_mini_batch()
 
 
 iters = 3000
-num_hidden = [64]
+num_hidden = [128, 5]
 nn.train(iters, num_hidden)
 nn.set_to_optimal_weights()
 nn.forward_prop(nn.test_data)

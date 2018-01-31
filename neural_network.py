@@ -40,7 +40,7 @@ class NeuralNetwork(object):
         mndata = MNIST(mnist_directory)
         tr_data, tr_labels = mndata.load_training()
         te_data, te_labels = mndata.load_testing()
-        train_temp = np.array(tr_data) / 175.0
+        train_temp = np.array(tr_data) / 127.5.0
 
         self.train_data = train_temp - 1.0
         self.train_labels = np.array(tr_labels)
