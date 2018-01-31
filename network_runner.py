@@ -94,13 +94,15 @@ class NetworkRunner(object):
 
         return td, tl
 
-    def compare_gradients(self, epsilon, dat, lab, weights_sigmoid, weights_softmax):
+    def compare_gradients(self, epsilon, dat, lab, weights_sigmoid, weights_softmax, bias):
         intermediate = self.sigmoid_layer.forward_prop(dat)
         preds = self.softmax_layer.forward_prop(intermediate)
 
         shape_perturb = weights_softmax.shape
         data_ind = random.randrange(0,self.minibatch_size) # from 1 to 128
         perturb_ind = [random.randrange(1,shape_perturb[0]),random.randrange(0,shape_perturb[1])]
+        if bias:
+            perturb_ind = [0,random.randrange(0,shape_perturb[1])]
         # ^ from [65x10], so [between 1 and 64][between 0 and 9]
 
         # for wjk
@@ -134,7 +136,9 @@ class NetworkRunner(object):
         grad_ind = random.randrange(1,65)
 
         shape_perturb = weights_sigmoid.shape
-        perturb_ind = [random.randrange(0,shape_perturb[0]),random.randrange(0,shape_perturb[1])]
+        perturb_ind = [random.randrange(1,shape_perturb[0]),random.randrange(0,shape_perturb[1])]
+        if bias:
+            perturb_ind = [0,random.randrange(0,shape_perturb[1])]
         grad_real = grad_real[grad_ind] # now this is 1x10
         # this is one number, corresponding to i and j
 
@@ -189,9 +193,17 @@ class NetworkRunner(object):
             d, l = self.get_next_mini_batch(shuffle=True)
 
         self.grad_diff_f = np.empty((0,2))
-        ii = 0
-        while ii<30:
-            grad_diff = self.compare_gradients(10**-2, d, l, self.sigmoid_layer.weights, self.softmax_layer.weights)
-            if grad_diff[0]<10**-4 and grad_diff[1]<10**-4:
-                ii+=1
-                self.grad_diff_f = np.vstack((self.grad_diff_f, grad_diff))
+        self.grad_diff_t = np.empty((0,2))
+        for bool_val in [False, True]:
+            ii = 0
+            while ii<30:
+                grad_diff = self.compare_gradients(10**-2, d, l, self.sigmoid_layer.weights, self.softmax_layer.weights, bias = bool_val)
+                if grad_diff[0]<10**-4 and grad_diff[1]<10**-4:
+                    ii+=1
+                    if bool_val ==False:
+                        self.grad_diff_f = np.vstack((self.grad_diff_f, grad_diff))
+                    else:
+                        self.grad_diff_t = np.vstack((self.grad_diff_t, grad_diff))
+
+
+
