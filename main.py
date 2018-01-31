@@ -14,7 +14,6 @@ iters = 1000
 num_hidden = 64
 nr.train(iters, num_hidden)
 
-
 plt.plot(xrange(iters), nr.train_loss_log)
 plt.show()
 
@@ -23,11 +22,11 @@ plt.show()
 
 plt.figure()
 c = plt.plot(xrange(30),[10**-4]*30,label='epsilon*10^-2')
-a = plt.plot(xrange(30),nr.grad_diff_f[:,0],label='Gradient difference of dE/dwjk')
-plt.ylabel('Gradient Difference')
-plt.xlabel('Iterations')
-b = plt.plot(xrange(30),nr.grad_diff_f[:,1],label='Gradient difference of dE/dwij')
-d = plt.plot(xrange(30), nr.grad_diff_t[0:30,0], label = 'Gradient difference of dE/dwjk, at bias')
-e = plt.plot(xrange(30), nr.grad_diff_t[0:30,1], label = 'Gradient difference of dE/dwij, at bias')
+a = plt.plot(xrange(30),nr.grad_diff_f[:,0],label='Change Wjk')
+plt.ylabel('Difference between gradient and numerical approximation')
+plt.xlabel('Random weight example')
+b = plt.plot(xrange(30),nr.grad_diff_f[:,1],label='Change Wij')
+d = plt.plot(xrange(30), nr.grad_diff_t[0:30,0], label = 'Change Wjk bias')
+e = plt.plot(xrange(30), nr.grad_diff_t[0:30,1], label = 'Change Wij bias')
 plt.legend()
 plt.show()
