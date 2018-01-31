@@ -12,7 +12,8 @@ np.set_printoptions(threshold=np.nan)
 
 class NeuralNetwork(object):
     def __init__(self, mnist_directory, lr0=None, lr_dampener=None,
-                 minibatch_size=128, magic_sigma=False, alpha=None):
+                 minibatch_size=128, magic_sigma=False, alpha=None,
+                 log_rate=10):
         self.mnist_directory = mnist_directory
         self.lr_dampener = lr_dampener
         self.holdout_data = None
@@ -33,6 +34,7 @@ class NeuralNetwork(object):
 
         self.magic_sigma = magic_sigma
         self.alpha = alpha
+        self.log_rate = log_rate
 
     def load_data(self, mnist_directory):
         mndata = MNIST(mnist_directory)
@@ -177,7 +179,7 @@ class NeuralNetwork(object):
         for iteration in xrange(iterations):
             self.forward_prop(data)
             self.back_prop(labels, eta)
-            if iteration % 50 == 0:
+            if iteration % self.log_rate == 0:
                 self.log(labels, iteration)
 
             eta = self.update_learning_rate(iteration)

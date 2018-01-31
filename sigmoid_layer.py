@@ -48,7 +48,7 @@ class SigmoidLayer(object):
 
         if alpha is not None:
             # print(self.weight_delta)
-            self.weights = self.weights + (-alpha * self.weight_delta + eta * np.dot(np.transpose(self.last_input), delta))
+            self.weights = self.weights + (alpha * self.weight_delta + eta * np.dot(np.transpose(self.last_input), delta))
         else:
             self.weights = self.weights + eta * np.dot(np.transpose(self.last_input), delta)
 

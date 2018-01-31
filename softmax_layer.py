@@ -45,7 +45,7 @@ class SoftmaxLayer(object):
         delta = self.get_delta(predictions, labels)
         self.prev_weights = self.weights
         if alpha is not None:
-            self.weights = self.weights + (-alpha * self.weight_delta + eta * np.dot(np.transpose(self.last_input), delta))
+            self.weights = self.weights + (alpha * self.weight_delta + eta * np.dot(np.transpose(self.last_input), delta))
         else:
             self.weights = self.weights + eta * np.dot(np.transpose(self.last_input), delta)
         self.weight_delta = self.weights - self.prev_weights

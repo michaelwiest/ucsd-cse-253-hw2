@@ -5,10 +5,11 @@ from softmax_layer import *
 from helper import *
 import pylab as plt
 
-nn = NeuralNetwork('mnist',
-                   lr_dampener=1000
+nn = NeuralNetwork('mnist'
+                   , log_rate=100
+                   , lr_dampener=2000
                    # , magic_sigma=True
-                   # , alpha=0.1
+                   , alpha=0.3
                    )
 nn.assign_holdout(16.6)
 d, l = nn.get_next_mini_batch()
