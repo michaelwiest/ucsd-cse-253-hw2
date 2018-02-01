@@ -10,12 +10,13 @@ def sigma_d(x):
     return s * (1 - s)
 
 def magic_sigma(x):
-    return -1.7159 * np.tanh((2.0 / 3.0) * x)
+    # return -1.7159 * np.tanh((2.0 / 3.0) * x)
+    return 1.7159 * np.tanh((2.0 * x / 3.0))
 
 def magic_sigma_d(x):
-    # return (2.0 / 3.0) * 1.7159 * (1.0 / (np.cosh((2.0 / 3.0) * x) * np.cosh((2.0 / 3.0) * x))) # ** 2 # * np.cosh((2.0 / 3.0) * x)))
-    return 1.7159 * (2.0 / 3.0) * (1.0 - (magic_sigma(x) * magic_sigma(x)))
-    # return 1.7159 * (2.0/3.0) * (1.0 - (np.tanh((2.0 / 3.0) * x) * np.tanh((2.0 / 3.0) * x)))
+    # return (2.0 / 3.0) * 1.7159 * (1.0 / (np.cosh((2.0 * x / 3.0)) * np.cosh((2.0 * x / 3.0)))) # ** 2 # * np.cosh((2.0 / 3.0) * x)))
+    # return 1.7159 * (2.0 / 3.0) * (1.0 - (magic_sigma(x) * magic_sigma(x)))
+    return 1.7159 * (2.0/3.0) * (1.0 - (np.tanh((2.0 * x / 3.0)) * np.tanh((2.0 * x / 3.0))))
     # return 1.0 - (magic_sigma(x) * magic_sigma(x))
 
 def softmax(x):
