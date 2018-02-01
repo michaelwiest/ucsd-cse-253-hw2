@@ -10,6 +10,7 @@ nn = NeuralNetwork('mnist'
                    , lr_dampener=2000
                    # , magic_sigma=True
                    , alpha=0.3
+
                    )
 nn.assign_holdout(16.6)
 d, l = nn.get_next_mini_batch()
@@ -17,7 +18,10 @@ d, l = nn.get_next_mini_batch()
 
 iters = 3000
 num_hidden = [64]
-nn.train(iters, num_hidden)
+nn.train(iters,
+         num_hidden
+         # , shuffle=False
+         )
 nn.set_to_optimal_weights()
 nn.forward_prop(nn.test_data)
 optimal_error = evaluate(nn.layers[-1].last_output, nn.test_labels)

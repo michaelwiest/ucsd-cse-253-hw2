@@ -35,6 +35,8 @@ class NeuralNetwork(object):
         self.magic_sigma = magic_sigma
         self.alpha = alpha
         self.log_rate = log_rate
+        self.new_epoch = False
+        self.epoch_num = 1
 
     def load_data(self, mnist_directory):
         mndata = MNIST(mnist_directory)
@@ -86,17 +88,22 @@ class NeuralNetwork(object):
         print('Assigned holdout data')
 
     def get_next_mini_batch(self, shuffle=False):
-        if not shuffle:
-            if (self.minibatch_index + 1) * self.minibatch_size > self.train_data.shape[0]:
-                self.minibatch_index = 0
+        if shuffle and self.new_epoch:
+            lab_temp = self.train_labels.reshape((len(self.train_labels), 1))
+            temp = np.concatenate((lab_temp, self.train_data), axis=1)
 
-            td = self.train_data[self.minibatch_index * self.minibatch_size : (self.minibatch_index + 1) * self.minibatch_size]
-            tl = self.train_labels[self.minibatch_index * self.minibatch_size : (self.minibatch_index + 1) * self.minibatch_size]
-            self.minibatch_index += 1
-        else:
-            indices = random.sample(xrange(self.train_data.shape[0]), self.minibatch_size)
-            td = self.train_data[indices]
-            tl = self.train_labels[indices]
+            np.random.shuffle(temp)
+            self.train_data = temp[:, 1:]
+            self.train_labels = temp[:, 0].ravel()
+            self.new_epoch = False
+            self.minibatch_index = 0
+
+        if (self.minibatch_index + 1) * self.minibatch_size > self.train_data.shape[0]:
+            self.minibatch_index = 0
+
+        td = self.train_data[self.minibatch_index * self.minibatch_size : (self.minibatch_index + 1) * self.minibatch_size]
+        tl = self.train_labels[self.minibatch_index * self.minibatch_size : (self.minibatch_index + 1) * self.minibatch_size]
+        self.minibatch_index += 1
 
         return td, tl
 
@@ -160,7 +167,8 @@ class NeuralNetwork(object):
             future_weights = layer.prev_weights
 
 
-    def train(self, iterations, hidden_layers, reset_batches=True, epochs_per_batch=1):
+    def train(self, iterations, hidden_layers, reset_batches=True,
+             epochs_per_batch=1, shuffle=True):
         # Reset logs.
         self.iterations = []
         self.train_loss_log = []
@@ -173,7 +181,7 @@ class NeuralNetwork(object):
             self.minibatch_index = 0
 
         eta = self.lr0
-        data, labels = self.get_next_mini_batch()
+        data, labels = self.get_next_mini_batch(shuffle=shuffle)
         self.__build_layers(hidden_layers)
 
         for iteration in xrange(iterations):
@@ -183,7 +191,12 @@ class NeuralNetwork(object):
                 self.log(labels, iteration)
 
             eta = self.update_learning_rate(iteration)
-            data, labels = self.get_next_mini_batch(shuffle=True)
+            if iteration * self.minibatch_size > self.epoch_num * self.train_data.shape[0] and not self.new_epoch:
+                self.new_epoch = True
+                self.epoch_num += 1
+            data, labels = self.get_next_mini_batch(shuffle=shuffle)
+
+
 
 
 
