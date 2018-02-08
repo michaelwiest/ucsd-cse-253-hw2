@@ -23,7 +23,7 @@ class NeuralNetwork(object):
         self.load_data(self.mnist_directory)
 
         if lr0 == None:
-            self.lr0 = 10.0 / self.train_data.shape[0]
+            self.lr0 = 150.0 / self.train_data.shape[0]
         else:
             self.lr0 = lr0
         self.minibatch_index = 0

@@ -6,9 +6,9 @@ from helper import *
 import pylab as plt
 
 nn = NeuralNetwork('mnist'
-                   , log_rate=20
+                   , log_rate=200
                    , lr_dampener=2000
-                   , magic_sigma=True
+                   # , magic_sigma=True
                    # , alpha=0.9
 
                    )
@@ -16,8 +16,8 @@ nn.assign_holdout(16.6)
 d, l = nn.get_next_mini_batch()
 
 
-iters = 200
-num_hidden = [64]
+iters = 3000
+num_hidden = [60, 60]
 nn.train(iters,
          num_hidden
          # , shuffle=False
